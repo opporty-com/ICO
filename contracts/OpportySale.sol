@@ -40,9 +40,9 @@ contract OpportySale is Pausable {
     enum SaleState { NEW, SALE, ENDED }
 
     mapping(address => ContributorData) public contributorList;
-    uint public nextContributorIndex;
-    uint public nextContributorToClaim;
-    uint public nextContributorToTransferTokens;
+    uint private nextContributorIndex;
+    uint private nextContributorToClaim;
+    uint private nextContributorToTransferTokens;
 
     mapping(uint => address) contributorIndexes;
     mapping(address => bool) hasClaimedEthWhenFail;
