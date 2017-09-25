@@ -119,7 +119,7 @@ contract OpportySale is Pausable {
     function() whenNotPaused public payable
     {
       require(msg.value != 0);
-      require(msg.value > (0.5 * 1 ether));
+      require(msg.value >= (0.5 * 1 ether));
       if (state == SaleState.ENDED) {
         revert();
       }
