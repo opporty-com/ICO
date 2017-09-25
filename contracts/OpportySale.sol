@@ -194,10 +194,8 @@ contract OpportySale is Pausable {
       uint timeBonus = calculateBonusForHours(tokenAmount);
 
       if (tokenAmount > 0) {
-
         contributorList[_contributor].tokensIssued += tokenAmount.add(timeBonus);
-
-        totalTokens += tokenAmount;
+        totalTokens += tokenAmount.add(timeBonus);
       }
       if (returnAmount != 0) _contributor.transfer(returnAmount);
     }
