@@ -220,8 +220,6 @@ contract OpportySale is Pausable {
       return 0;
     }
 
-
-
     function getTokens() whenNotPaused {
       require(now > endDate && ethRaised > SOFTCAP);
       require(state == SaleState.ENDED);
@@ -300,19 +298,13 @@ contract OpportySale is Pausable {
       }
     }
 
-    function withdrawEth() onlyOwner  {
+    function withdrawEth()   {
       require(this.balance != 0);
       require(ethRaised >= SOFTCAP);
 
-      pendingEthWithdrawal = this.balance;
-    }
-
-    function pullBalance() {
       require(msg.sender == wallet);
-      require(pendingEthWithdrawal > 0);
 
-      wallet.transfer(pendingEthWithdrawal);
-      pendingEthWithdrawal = 0;
+      wallet.transfer(this.balance);
     }
 
     function refundTransaction(bool _stateChanged) internal {
