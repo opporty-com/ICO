@@ -9,8 +9,6 @@ contract OpportySale is Pausable {
 
     OpportyToken token;
 
-    address admin;
-
     uint public SOFTCAP;
     uint public HARDCAP;
     uint public startDate;
@@ -66,7 +64,6 @@ contract OpportySale is Pausable {
     function OpportySale(address tokenAddress, address walletAddress, uint start, uint end)
     {
       token = OpportyToken(tokenAddress);
-      admin = msg.sender;
       state = SaleState.NEW;
       SOFTCAP  = 1000 * 1 ether;
       HARDCAP = 80000 * 1 ether;
