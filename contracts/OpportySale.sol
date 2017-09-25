@@ -17,23 +17,21 @@ contract OpportySale is Pausable {
     uint public ethRaised;
     uint public totalTokens;
     uint public withdrawedTokens;
-
     uint public pendingEthWithdrawal;
     address public wallet;
 
-    uint256 private firstBonusPhase;
-    uint256 private firstExtraBonus;
+    uint private firstBonusPhase;
+    uint private firstExtraBonus;
+    uint private secondBonusPhase;
+    uint private secondExtraBonus;
+    uint private thirdBonusPhase;
+    uint private thirdExtraBonus;
+    uint private fourBonusPhase;
+    uint private fourExtraBonus;
 
-    uint256 private secondBonusPhase;
-    uint256 private secondExtraBonus;
+    uint private minimumTokensToStart = 480000000 * (10 ** 18);
 
-    uint256 private thirdBonusPhase;
-    uint256 private thirdExtraBonus;
-
-    uint256 private fourBonusPhase;
-    uint256 private fourExtraBonus;
-
-    struct ContributorData{
+    struct ContributorData {
       bool isActive;
       uint contributionAmount;
       uint tokensIssued;
@@ -121,6 +119,7 @@ contract OpportySale is Pausable {
     function() whenNotPaused public payable
     {
       require(msg.value != 0);
+      require(msg.value > (0.5 * 1 ether));
       require(state != SaleState.NEW);
       if (state == SaleState.ENDED) {
         revert();
@@ -150,7 +149,7 @@ contract OpportySale is Pausable {
       }
 
       if(now > startDate && now <= endDate) {
-        if (state != SaleState.SALE && checkBalanceContract() >= 80000 * (10 ** 18) ) {
+        if (state != SaleState.SALE && checkBalanceContract() >= minimumTokensToStart ) {
           state = SaleState.SALE;
           CrowdsaleStarted(block.number);
           return true;
