@@ -83,7 +83,7 @@ contract OpportySale {
       endDate = end;
 
       firstBonusPhase = startDate.add(1 days);
-      firstExtraBonus = 25;
+      firstExtraBonus = 20;
 
       secondBonusPhase = startDate.add(3 days);
       secondExtraBonus = 15;
