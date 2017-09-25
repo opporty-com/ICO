@@ -2,7 +2,13 @@ pragma solidity ^0.4.13;
 
 import "./OpportyToken.sol";
 
+
+
+
+
 contract OpportySale {
+
+    using SafeMath for uint256;
 
     OpportyToken token;
 
@@ -20,10 +26,17 @@ contract OpportySale {
     uint public pendingEthWithdrawal;
     address public wallet;
 
-    uint public firstStage;
-    uint public secondStage;
-    uint public thirdStage;
-    uint public fourthStage;
+    uint256 private firstBonusPhase;
+    uint256 private firstExtraBonus;
+
+    uint256 private secondBonusPhase;
+    uint256 private secondExtraBonus;
+
+    uint256 private thirdBonusPhase;
+    uint256 private thirdExtraBonus;
+
+    uint256 private fourBonusPhase;
+    uint256 private fourExtraBonus;
 
     struct ContributorData{
       bool isActive;
@@ -68,10 +81,19 @@ contract OpportySale {
       price = 0.0002 * 1 ether;
       startDate = start;
       endDate = end;
-      firstStage = startDate + 1 days;
-      secondStage = startDate + 3 * 1 days;
-      thirdStage = startDate + 8 * 1 days;
-      fourthStage = startDate + 14 * 1 days;
+
+      firstBonusPhase = startDate.add(1 days);
+      firstExtraBonus = 25;
+
+      secondBonusPhase = startDate.add(3 days);
+      secondExtraBonus = 15;
+
+      thirdBonusPhase = startDate.add(8 days);
+      thirdExtraBonus = 10;
+
+      fourBonusPhase = startDate.add(14 days);
+      fourExtraBonus = 5;
+
       wallet = walletAddress;
     }
 
@@ -83,11 +105,11 @@ contract OpportySale {
     {
       require(state == SaleState.NEW);
       startDate = date;
-      firstStage = startDate + 1 days;
-      secondStage = startDate + 3 * 1 days;
-      thirdStage = startDate + 8 * 1 days;
-      fourthStage = startDate + 14 * 1 days;
-     }
+      firstBonusPhase = startDate.add(1 days);
+      secondBonusPhase = startDate.add(3 days);
+      thirdBonusPhase = startDate.add(8 days);
+      fourBonusPhase = startDate.add(14 days);
+    }
 
     function setEndDate(uint date) onlyOwner
     {
@@ -193,26 +215,39 @@ contract OpportySale {
 
       FundTransfered(_contributor, contributionAmount);
 
-      uint ethToTokenConversion = price;
+      uint tokenAmount = contributionAmount.div(price);
+      uint timeBonus = calculateBonusForHours(tokenAmount);
 
-      if (now < firstStage) {
-        ethToTokenConversion += ethToTokenConversion * (uint(1) / uint(5));
-      } else if (now < secondStage) {
-        ethToTokenConversion += ethToTokenConversion * (uint(3) / uint(20));
-      } else if (now < thirdStage) {
-        ethToTokenConversion += ethToTokenConversion * (uint(1) / uint(10));
-      } else if (now < fourthStage) {
-        ethToTokenConversion += ethToTokenConversion * (uint(1) / uint(20));
-      }
-
-      uint tokenAmount = contributionAmount * ethToTokenConversion;
       if (tokenAmount > 0) {
-        contributorList[_contributor].tokensIssued += tokenAmount;
+
+        contributorList[_contributor].tokensIssued += tokenAmount.add(timeBonus);
 
         totalTokens += tokenAmount;
       }
       if (returnAmount != 0) _contributor.transfer(returnAmount);
     }
+
+    function calculateBonusForHours(uint256 _tokens) private returns(uint256) {
+      if (now >= startDate && now <= firstBonusPhase ) {
+        return _tokens.mul(firstExtraBonus).div(100);
+      }
+
+      if (now > startDate && now <= secondBonusPhase ) {
+        return _tokens.mul(secondExtraBonus).div(100);
+      }
+
+      if (now > startDate && now <= thirdBonusPhase ) {
+        return _tokens.mul(thirdExtraBonus).div(100);
+      }
+
+      if (now > startDate && now <= fourBonusPhase ) {
+        return _tokens.mul(fourExtraBonus).div(100);
+      }
+
+      return 0;
+    }
+
+
 
     function getTokens() {
       require(now > endDate && ethRaised > SOFTCAP);
