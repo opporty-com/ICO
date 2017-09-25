@@ -15,6 +15,7 @@ contract OpportySale {
     uint public price;
     uint public ethRaised;
     uint public totalTokens;
+    uint public withdrawedTokens;
 
     uint pendingEthWithdrawal;
     address public wallet;
@@ -23,8 +24,6 @@ contract OpportySale {
     uint secondStage;
     uint thirdStage;
     uint fourthStage;
-
-    uint withdrawedTokens;
 
 
 
