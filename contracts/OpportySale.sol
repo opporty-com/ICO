@@ -17,6 +17,7 @@ contract OpportySale is Pausable {
     uint public ethRaised;
     uint public totalTokens;
     uint public withdrawedTokens;
+    uint public minimalContribution;
     address public wallet;
 
     uint private firstBonusPhase;
@@ -58,8 +59,7 @@ contract OpportySale is Pausable {
 
     SaleState state;
 
-    function OpportySale(address tokenAddress, address walletAddress, uint start, uint end)
-    {
+    function OpportySale(address tokenAddress, address walletAddress, uint start, uint end) {
       token = OpportyToken(tokenAddress);
       state = SaleState.NEW;
       SOFTCAP  = 1000 * 1 ether;
@@ -67,18 +67,18 @@ contract OpportySale is Pausable {
       price = 0.0002 * 1 ether;
       startDate = start;
       endDate = end;
+      minimalContribution = 0.5 * 1 ether;
 
       firstBonusPhase = startDate.add(1 days);
       firstExtraBonus = 20;
-
       secondBonusPhase = startDate.add(3 days);
       secondExtraBonus = 15;
-
       thirdBonusPhase = startDate.add(8 days);
       thirdExtraBonus = 10;
-
       fourBonusPhase = startDate.add(14 days);
       fourExtraBonus = 5;
+
+
 
       wallet = walletAddress;
     }
@@ -87,8 +87,7 @@ contract OpportySale is Pausable {
       return uint(state);
     }
 
-    function setStartDate(uint date) onlyOwner
-    {
+    function setStartDate(uint date) onlyOwner {
       require(state == SaleState.NEW);
       startDate = date;
       firstBonusPhase = startDate.add(1 days);
@@ -97,39 +96,35 @@ contract OpportySale is Pausable {
       fourBonusPhase = startDate.add(14 days);
     }
 
-    function setEndDate(uint date) onlyOwner
-    {
+    function setEndDate(uint date) onlyOwner {
       require(state == SaleState.NEW || state == SaleState.SALE);
       endDate = date;
     }
 
-    function setSoftCap(uint softCap) onlyOwner
-    {
+    function setSoftCap(uint softCap) onlyOwner {
       require(state == SaleState.NEW);
       SOFTCAP = softCap;
     }
 
-    function setHardCap(uint hardCap) onlyOwner
-    {
+    function setHardCap(uint hardCap) onlyOwner {
       require(state == SaleState.NEW);
       HARDCAP = hardCap;
     }
 
-    function() whenNotPaused public payable
-    {
+    function() whenNotPaused public payable {
       require(msg.value != 0);
-      require(msg.value >= (0.5 * 1 ether));
+
       if (state == SaleState.ENDED) {
         revert();
       }
 
-      bool stateChanged = checkCrowdsaleState();
+      checkCrowdsaleState();
 
       if(state == SaleState.SALE) {
-        processTransaction(msg.sender, msg.value);    // Process transaction and issue tokens
+        processTransaction(msg.sender, msg.value);
       }
       else {
-        refundTransaction(stateChanged);              // Set state and return funds or throw
+        revert();
       }
     }
 
@@ -137,33 +132,30 @@ contract OpportySale is Pausable {
       return token.balanceOf(this);
     }
 
-    function checkCrowdsaleState() internal returns (bool) {
-
+    function checkCrowdsaleState() internal {
       if (ethRaised >= HARDCAP && state != SaleState.ENDED) {
         state = SaleState.ENDED;
         HardCapReached(block.number); // Close the crowdsale
         CrowdsaleEnded(block.number);
-        return true;
       }
 
       if(now > startDate && now <= endDate) {
         if (state != SaleState.SALE && checkBalanceContract() >= minimumTokensToStart ) {
           state = SaleState.SALE;
           CrowdsaleStarted(block.number);
-          return true;
         }
       } else {
-        if (state != SaleState.ENDED && now > endDate){        // Check if crowdsale is over
-          state = SaleState.ENDED;                                                  // Set new state
-          CrowdsaleEnded(block.number);                                                           // Raise event
-          return true;
+        if (state != SaleState.ENDED && now > endDate) {
+          state = SaleState.ENDED;
+          CrowdsaleEnded(block.number);
         }
       }
-
-      return false;
     }
 
     function processTransaction(address _contributor, uint _amount) internal {
+
+      require(msg.value >= minimalContribution);
+
       uint maxContribution = calculateMaxContribution();
       uint contributionAmount = _amount;
       uint returnAmount = 0;
@@ -177,12 +169,10 @@ contract OpportySale is Pausable {
 
       if (contributorList[_contributor].isActive == false) {
         contributorList[_contributor].isActive = true;
-
         contributorList[_contributor].contributionAmount = contributionAmount;
         contributorIndexes[nextContributorIndex] = _contributor;
         nextContributorIndex++;
-      }
-      else {
+      } else {
         contributorList[_contributor].contributionAmount += contributionAmount;
       }
       ethRaised += contributionAmount;
@@ -203,19 +193,15 @@ contract OpportySale is Pausable {
       if (now >= startDate && now <= firstBonusPhase ) {
         return _tokens.mul(firstExtraBonus).div(100);
       }
-
       if (now > startDate && now <= secondBonusPhase ) {
         return _tokens.mul(secondExtraBonus).div(100);
       }
-
       if (now > startDate && now <= thirdBonusPhase ) {
         return _tokens.mul(thirdExtraBonus).div(100);
       }
-
       if (now > startDate && now <= fourBonusPhase ) {
         return _tokens.mul(fourExtraBonus).div(100);
       }
-
       return 0;
     }
 
@@ -241,7 +227,6 @@ contract OpportySale is Pausable {
       require(state == SaleState.ENDED);
 
       address currentParticipantAddress;
-
       uint tokensCount;
 
       for (uint cnt = 0; cnt < _numberOfReturns; cnt++) {
@@ -251,7 +236,7 @@ contract OpportySale is Pausable {
           tokensCount = contributorList[currentParticipantAddress].tokensIssued;
           hasWithdrawedTokens[currentParticipantAddress] = true;
           if (token.transfer(currentParticipantAddress, tokensCount)) {
-              TokensTransfered(currentParticipantAddress , tokensCount);
+              TokensTransfered(currentParticipantAddress, tokensCount);
             withdrawedTokens += tokensCount;
             contributorList[currentParticipantAddress].tokensIssued = 0;
             hasWithdrawedTokens[msg.sender] = true;
@@ -297,21 +282,12 @@ contract OpportySale is Pausable {
       }
     }
 
-    function withdrawEth()   {
+    function withdrawEth() {
       require(this.balance != 0);
       require(ethRaised >= SOFTCAP);
-
       require(msg.sender == wallet);
 
       wallet.transfer(this.balance);
-    }
-
-    function refundTransaction(bool _stateChanged) internal {
-      if (_stateChanged) {
-         msg.sender.transfer(msg.value);
-       }else{
-         revert();
-       }
     }
 
     function withdrawRemainingBalanceForManualRecovery() onlyOwner  {
