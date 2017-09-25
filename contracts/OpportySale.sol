@@ -1,5 +1,5 @@
 pragma solidity ^0.4.13;
-
+import "./SafeMath.sol";
 import "./OpportyToken.sol";
 import "./Pausable.sol";
 
