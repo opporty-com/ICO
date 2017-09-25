@@ -1,12 +1,9 @@
 pragma solidity ^0.4.13;
 
 import "./OpportyToken.sol";
+import "./Pausable.sol";
 
-
-
-
-
-contract OpportySale {
+contract OpportySale is Pausable {
 
     using SafeMath for uint256;
 
@@ -44,7 +41,7 @@ contract OpportySale {
       uint tokensIssued;
     }
 
-    enum SaleState { NEW, SALE, PAUSED, ENDED }
+    enum SaleState { NEW, SALE, ENDED }
 
     mapping(address => ContributorData) public contributorList;
     uint public nextContributorIndex;
@@ -65,11 +62,6 @@ contract OpportySale {
     event ErrorSendingETH(address to, uint amount);
 
     SaleState state;
-
-    modifier onlyOwner {
-       if (msg.sender != admin) revert();
-       _;
-    }
 
     function OpportySale(address tokenAddress, address walletAddress, uint start, uint end)
     {
@@ -129,23 +121,11 @@ contract OpportySale {
       HARDCAP = hardCap;
     }
 
-    function pause() onlyOwner
-    {
-      require(state == SaleState.SALE);
-      state = SaleState.PAUSED;
-    }
-
-    function resume() onlyOwner
-    {
-      require(state == SaleState.PAUSED);
-      state = SaleState.SALE;
-    }
-
-    function() public payable
+    function() whenNotPaused public payable
     {
       require(msg.value != 0);
       require(state != SaleState.NEW);
-      if (state == SaleState.PAUSED || state == SaleState.ENDED) {
+      if (state == SaleState.ENDED) {
         revert();
       }
 
@@ -227,7 +207,7 @@ contract OpportySale {
       if (returnAmount != 0) _contributor.transfer(returnAmount);
     }
 
-    function calculateBonusForHours(uint256 _tokens) private returns(uint256) {
+    function calculateBonusForHours(uint256 _tokens) internal returns(uint256) {
       if (now >= startDate && now <= firstBonusPhase ) {
         return _tokens.mul(firstExtraBonus).div(100);
       }
@@ -249,7 +229,7 @@ contract OpportySale {
 
 
 
-    function getTokens() {
+    function getTokens() whenNotPaused {
       require(now > endDate && ethRaised > SOFTCAP);
       require(state == SaleState.ENDED);
       require(contributorList[msg.sender].tokensIssued > 0);
@@ -266,7 +246,7 @@ contract OpportySale {
 
     }
 
-    function batchReturnTokens(uint _numberOfReturns) onlyOwner {
+    function batchReturnTokens(uint _numberOfReturns) onlyOwner whenNotPaused {
       require(now > endDate && ethRaised > SOFTCAP);
       require(state == SaleState.ENDED);
 
@@ -292,7 +272,7 @@ contract OpportySale {
 
     }
 
-    function claimEthIfFailed() {
+    function claimEthIfFailed() whenNotPaused {
       require(now > endDate && ethRaised < SOFTCAP);
       require(contributorList[msg.sender].contributionAmount > 0);
       require(!hasClaimedEthWhenFail[msg.sender]);
@@ -306,7 +286,7 @@ contract OpportySale {
       }
     }
 
-    function batchReturnEthIfFailed(uint _numberOfReturns) onlyOwner {
+    function batchReturnEthIfFailed(uint _numberOfReturns) onlyOwner whenNotPaused {
       require(now > endDate && ethRaised < SOFTCAP);
       address currentParticipantAddress;
       uint contribution;
@@ -327,7 +307,7 @@ contract OpportySale {
       }
     }
 
-    function withdrawEth() onlyOwner {
+    function withdrawEth() onlyOwner  {
       require(this.balance != 0);
       require(ethRaised >= SOFTCAP);
 
@@ -350,7 +330,7 @@ contract OpportySale {
        }
     }
 
-    function withdrawRemainingBalanceForManualRecovery() onlyOwner {
+    function withdrawRemainingBalanceForManualRecovery() onlyOwner  {
       require(this.balance != 0);
       require(now > endDate);
       require(contributorIndexes[nextContributorToClaim] == 0x0);
