@@ -17,7 +17,6 @@ contract OpportySale is Pausable {
     uint public ethRaised;
     uint public totalTokens;
     uint public withdrawedTokens;
-    uint public pendingEthWithdrawal;
     address public wallet;
 
     uint private firstBonusPhase;
