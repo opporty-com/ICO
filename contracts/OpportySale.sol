@@ -17,15 +17,13 @@ contract OpportySale {
     uint public totalTokens;
     uint public withdrawedTokens;
 
-    uint pendingEthWithdrawal;
+    uint public pendingEthWithdrawal;
     address public wallet;
 
-    uint firstStage;
-    uint secondStage;
-    uint thirdStage;
-    uint fourthStage;
-
-
+    uint public firstStage;
+    uint public secondStage;
+    uint public thirdStage;
+    uint public fourthStage;
 
     struct ContributorData{
       bool isActive;
@@ -33,29 +31,25 @@ contract OpportySale {
       uint tokensIssued;
     }
 
-    mapping(address => ContributorData) public contributorList;
-    uint nextContributorIndex;
-    uint nextContributorToClaim;
+    enum SaleState { NEW, SALE, PAUSED, ENDED }
 
-    uint nextContributorToTransferTokens;
+    mapping(address => ContributorData) public contributorList;
+    uint public nextContributorIndex;
+    uint public nextContributorToClaim;
+    uint public nextContributorToTransferTokens;
 
     mapping(uint => address) contributorIndexes;
-
     mapping(address => bool) hasClaimedEthWhenFail;
     mapping(address => bool) hasWithdrawedTokens;
 
     event CrowdsaleStarted(uint blockNumber);
     event CrowdsaleEnded(uint blockNumber);
-
     event SoftCapReached(uint blockNumber);
     event HardCapReached(uint blockNumber);
-
     event FundTransfered(address contrib, uint amount);
     event TokensTransfered(address contributor , uint amount);
     event Refunded(address ref, uint amount);
     event ErrorSendingETH(address to, uint amount);
-
-    enum SaleState { NEW, SALE, PAUSED, ENDED }
 
     SaleState state;
 
@@ -78,7 +72,6 @@ contract OpportySale {
       secondStage = startDate + 3 * 1 days;
       thirdStage = startDate + 8 * 1 days;
       fourthStage = startDate + 14 * 1 days;
-
       wallet = walletAddress;
     }
 
@@ -203,13 +196,13 @@ contract OpportySale {
       uint ethToTokenConversion = price;
 
       if (now < firstStage) {
-        ethToTokenConversion = ethToTokenConversion * (uint(1) / uint(5));
+        ethToTokenConversion += ethToTokenConversion * (uint(1) / uint(5));
       } else if (now < secondStage) {
-        ethToTokenConversion = ethToTokenConversion * (uint(3) / uint(20));
+        ethToTokenConversion += ethToTokenConversion * (uint(3) / uint(20));
       } else if (now < thirdStage) {
-        ethToTokenConversion *= ethToTokenConversion * (uint(1) / uint(10));
+        ethToTokenConversion += ethToTokenConversion * (uint(1) / uint(10));
       } else if (now < fourthStage) {
-        ethToTokenConversion *= ethToTokenConversion * (uint(1) / uint(20));
+        ethToTokenConversion += ethToTokenConversion * (uint(1) / uint(20));
       }
 
       uint tokenAmount = contributionAmount * ethToTokenConversion;
@@ -299,9 +292,6 @@ contract OpportySale {
       }
     }
 
-    //
-    // withdrawEth when minimum cap is reached
-    //
     function withdrawEth() onlyOwner {
       require(this.balance != 0);
       require(ethRaised >= SOFTCAP);
@@ -325,14 +315,11 @@ contract OpportySale {
        }
     }
 
-    //
-    // If there were any issue/attach with refund owner can withraw eth at the end for manual recovery
-    //
-    function withdrawRemainingBalanceForManualRecovery() onlyOwner{
-      require(this.balance != 0);                                  // Check if there are any eth to claim
-      require(now > endDate);                 // Check if crowdsale is over
-      require(contributorIndexes[nextContributorToClaim] == 0x0);  // Check if all the users were refunded
-      wallet.transfer(this.balance);                      // Withdraw to multisig
+    function withdrawRemainingBalanceForManualRecovery() onlyOwner {
+      require(this.balance != 0);
+      require(now > endDate);
+      require(contributorIndexes[nextContributorToClaim] == 0x0);
+      wallet.transfer(this.balance);
     }
 
     function getAccountsNumber() constant returns (uint) {
@@ -351,9 +338,7 @@ contract OpportySale {
       return withdrawedTokens;
     }
 
-    function calculateMaxContribution() constant returns (uint maxContribution) {
+    function calculateMaxContribution() constant returns (uint) {
        return HARDCAP - ethRaised;
     }
-
-
 }
