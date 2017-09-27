@@ -18,6 +18,7 @@ contract OpportySale is Pausable {
     uint public totalTokens;
     uint public withdrawedTokens;
     uint public minimalContribution;
+
     address public wallet;
 
     uint private firstBonusPhase;
@@ -35,6 +36,7 @@ contract OpportySale is Pausable {
       bool isActive;
       uint contributionAmount;
       uint tokensIssued;
+      uint bonusAmount;
     }
 
     enum SaleState { NEW, SALE, ENDED }
@@ -77,8 +79,6 @@ contract OpportySale is Pausable {
       thirdExtraBonus = 10;
       fourBonusPhase = startDate.add(14 days);
       fourExtraBonus = 5;
-
-
 
       wallet = walletAddress;
     }
@@ -184,6 +184,7 @@ contract OpportySale is Pausable {
 
       if (tokenAmount > 0) {
         contributorList[_contributor].tokensIssued += tokenAmount.add(timeBonus);
+        contributorList[_contributor].bonusAmount += timeBonus;
         totalTokens += tokenAmount.add(timeBonus);
       }
       if (returnAmount != 0) _contributor.transfer(returnAmount);
@@ -236,7 +237,7 @@ contract OpportySale is Pausable {
           tokensCount = contributorList[currentParticipantAddress].tokensIssued;
           hasWithdrawedTokens[currentParticipantAddress] = true;
           if (token.transfer(currentParticipantAddress, tokensCount)) {
-              TokensTransfered(currentParticipantAddress, tokensCount);
+            TokensTransfered(currentParticipantAddress, tokensCount);
             withdrawedTokens += tokensCount;
             contributorList[currentParticipantAddress].tokensIssued = 0;
             hasWithdrawedTokens[msg.sender] = true;
