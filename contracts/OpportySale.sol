@@ -207,7 +207,7 @@ contract OpportySale is Pausable {
     }
 
     function getTokens() whenNotPaused {
-      require(now > endDate && ethRaised > SOFTCAP);
+      require((now > endDate && ethRaised > SOFTCAP )  || (ethRaised >= HARDCAP)  );
       require(state == SaleState.ENDED);
       require(contributorList[msg.sender].tokensIssued > 0);
       require(!hasWithdrawedTokens[msg.sender]);
@@ -224,7 +224,7 @@ contract OpportySale is Pausable {
     }
 
     function batchReturnTokens(uint _numberOfReturns) onlyOwner whenNotPaused {
-      require(now > endDate && ethRaised > SOFTCAP);
+      require((now > endDate && ethRaised > SOFTCAP )  || (ethRaised >= HARDCAP)  );
       require(state == SaleState.ENDED);
 
       address currentParticipantAddress;
