@@ -83,10 +83,6 @@ contract OpportySale is Pausable {
       wallet = walletAddress;
     }
 
-    function getSaleStatus() constant returns (uint) {
-      return uint(state);
-    }
-
     function setStartDate(uint date) onlyOwner {
       require(state == SaleState.NEW);
       startDate = date;
@@ -301,20 +297,32 @@ contract OpportySale is Pausable {
     function getAccountsNumber() constant returns (uint) {
       return nextContributorIndex;
     }
-
     function getEthRaised() constant returns (uint) {
       return ethRaised;
     }
-
     function getTokensTotal() constant returns (uint) {
       return totalTokens;
     }
-
     function getWithdrawedToken() constant returns (uint) {
       return withdrawedTokens;
     }
-
     function calculateMaxContribution() constant returns (uint) {
        return HARDCAP - ethRaised;
     }
+    function getSoftCap() constant returns(uint) {
+      return SOFTCAP;
+    }
+    function getHardCap() constant returns(uint) {
+      return HARDCAP;
+    }
+    function getSaleStatus() constant returns (uint) {
+      return uint(state);
+    }
+    function getStartDate() constant returns (uint) {
+      return startDate;
+    }
+    function getEndDate() constant returns (uint) {
+      return endDate;
+    }
+
 }
