@@ -40,16 +40,16 @@ contract OpportySale is Pausable {
       uint bonusAmount;
     }
 
-    enum SaleState { NEW, SALE, ENDED }
+    enum SaleState  { NEW, SALE, ENDED }
 
-    mapping(address => ContributorData) public contributorList;
+    mapping(address => ContributorData) private contributorList;
     uint private nextContributorIndex;
     uint private nextContributorToClaim;
     uint private nextContributorToTransferTokens;
 
-    mapping(uint => address) contributorIndexes;
-    mapping(address => bool) hasClaimedEthWhenFail;
-    mapping(address => bool) hasWithdrawedTokens;
+    mapping(uint => address) private contributorIndexes;
+    mapping(address => bool) private hasClaimedEthWhenFail;
+    mapping(address => bool) private hasWithdrawedTokens;
 
     event CrowdsaleStarted(uint blockNumber);
     event CrowdsaleEnded(uint blockNumber);
@@ -60,7 +60,7 @@ contract OpportySale is Pausable {
     event Refunded(address ref, uint amount);
     event ErrorSendingETH(address to, uint amount);
 
-    SaleState state;
+    SaleState private state;
 
     function OpportySale(address tokenAddress, address walletAddress, uint start, uint end) {
       token = OpportyToken(tokenAddress);
