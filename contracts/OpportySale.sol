@@ -9,17 +9,17 @@ contract OpportySale is Pausable {
 
     OpportyToken token;
 
-    uint public SOFTCAP;
-    uint public HARDCAP;
-    uint public startDate;
-    uint public endDate;
-    uint public price;
-    uint public ethRaised;
-    uint public totalTokens;
-    uint public withdrawedTokens;
-    uint public minimalContribution;
+    uint private SOFTCAP;
+    uint private HARDCAP;
+    uint private startDate;
+    uint private endDate;
+    uint private price;
+    uint private ethRaised;
+    uint private totalTokens;
+    uint private withdrawedTokens;
+    uint private minimalContribution;
 
-    address public wallet;
+    address private wallet;
 
     uint private firstBonusPhase;
     uint private firstExtraBonus;
