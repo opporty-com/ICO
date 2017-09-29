@@ -228,7 +228,6 @@ contract OpportySale is Pausable {
       if (token.transfer(msg.sender, tokenCount * (10 ** 18) )) {
         TokensTransfered(msg.sender , tokenCount * (10 ** 18) );
         withdrawedTokens += tokenCount;
-        contributorList[msg.sender].tokensIssued = 0;
         hasWithdrawedTokens[msg.sender] = true;
       }
 
@@ -250,7 +249,6 @@ contract OpportySale is Pausable {
           if (token.transfer(currentParticipantAddress, tokensCount * (10 ** 18))) {
             TokensTransfered(currentParticipantAddress, tokensCount * (10 ** 18));
             withdrawedTokens += tokensCount;
-            contributorList[currentParticipantAddress].tokensIssued = 0;
             hasWithdrawedTokens[msg.sender] = true;
           }
         }
