@@ -305,7 +305,7 @@ contract OpportySale is Pausable {
       require(this.balance != 0);
       require(now > endDate);
       require(contributorIndexes[nextContributorToClaim] == 0x0);
-      wallet.transfer(this.balance);
+      msg.sender.transfer(this.balance);
     }
 
     function getAccountsNumber() constant returns (uint) {
@@ -358,5 +358,5 @@ contract OpportySale is Pausable {
         return contributorList[acc].contributionAmount;
       }
       return 0;
-    } 
+    }
 }
