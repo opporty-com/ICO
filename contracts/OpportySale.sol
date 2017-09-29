@@ -132,7 +132,7 @@ contract OpportySale is Pausable {
          revert();
        }
     }
-    
+
 
     function checkBalanceContract() internal returns (uint) {
       return token.balanceOf(this);
@@ -224,8 +224,8 @@ contract OpportySale is Pausable {
 
       uint tokenCount = contributorList[msg.sender].tokensIssued;
 
-      if (token.transfer(msg.sender, tokenCount)) {
-        TokensTransfered(msg.sender , tokenCount);
+      if (token.transfer(msg.sender, tokenCount * (10 ** 18) )) {
+        TokensTransfered(msg.sender , tokenCount * (10 ** 18));
         withdrawedTokens += tokenCount;
         contributorList[msg.sender].tokensIssued = 0;
         hasWithdrawedTokens[msg.sender] = true;
@@ -246,8 +246,8 @@ contract OpportySale is Pausable {
         if (!hasWithdrawedTokens[currentParticipantAddress]) {
           tokensCount = contributorList[currentParticipantAddress].tokensIssued;
           hasWithdrawedTokens[currentParticipantAddress] = true;
-          if (token.transfer(currentParticipantAddress, tokensCount)) {
-            TokensTransfered(currentParticipantAddress, tokensCount);
+          if (token.transfer(currentParticipantAddress, tokensCount * (10 ** 18))) {
+            TokensTransfered(currentParticipantAddress, tokensCount * (10 ** 18));
             withdrawedTokens += tokensCount;
             contributorList[currentParticipantAddress].tokensIssued = 0;
             hasWithdrawedTokens[msg.sender] = true;
