@@ -59,6 +59,7 @@ contract OpportySale is Pausable {
     event TokensTransfered(address contributor , uint amount);
     event Refunded(address ref, uint amount);
     event ErrorSendingETH(address to, uint amount);
+    event WithdrawedEthToWallet(uint amount);
 
     SaleState private state;
 
@@ -299,6 +300,7 @@ contract OpportySale is Pausable {
       require(msg.sender == wallet);
 
       wallet.transfer(this.balance);
+      WithdrawedEthToWallet(this.balance);
     }
 
     function withdrawRemainingBalanceForManualRecovery() onlyOwner  {
