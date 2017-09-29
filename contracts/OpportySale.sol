@@ -225,7 +225,7 @@ contract OpportySale is Pausable {
       uint tokenCount = contributorList[msg.sender].tokensIssued;
 
       if (token.transfer(msg.sender, tokenCount * (10 ** 18) )) {
-        TokensTransfered(msg.sender , tokenCount * (10 ** 18));
+        TokensTransfered(msg.sender , tokenCount * (10 ** 18) );
         withdrawedTokens += tokenCount;
         contributorList[msg.sender].tokensIssued = 0;
         hasWithdrawedTokens[msg.sender] = true;
@@ -339,4 +339,24 @@ contract OpportySale is Pausable {
       return endDate;
     }
 
+    function getTokensIssued(address acc) constant returns (uint) {
+      if (contributorList[acc].isActive) {
+        return contributorList[acc].tokensIssued;
+      }
+      return 0;
+    }
+
+    function getBonus(address acc) constant returns (uint) {
+      if (contributorList[acc].isActive) {
+        return contributorList[acc].bonusAmount;
+      }
+      return 0;
+    }
+
+    function getContribution(address acc) constant returns (uint) {
+      if (contributorList[acc].isActive) {
+        return contributorList[acc].contributionAmount;
+      }
+      return 0;
+    } 
 }
