@@ -115,38 +115,51 @@ contract OpportySale is Pausable {
         revert();
       }
 
-      checkCrowdsaleState();
+      bool chstate = checkCrowdsaleState();
 
       if(state == SaleState.SALE) {
         processTransaction(msg.sender, msg.value);
       }
       else {
-        revert();
+        refundTransaction(chstate);
       }
     }
+
+    function refundTransaction(bool _stateChanged) internal {
+      if (_stateChanged) {
+         msg.sender.transfer(msg.value);
+       }else{
+         revert();
+       }
+    }
+    
 
     function checkBalanceContract() internal returns (uint) {
       return token.balanceOf(this);
     }
 
-    function checkCrowdsaleState() internal {
+    function checkCrowdsaleState() internal returns (bool){
       if (ethRaised >= HARDCAP && state != SaleState.ENDED) {
         state = SaleState.ENDED;
         HardCapReached(block.number); // Close the crowdsale
         CrowdsaleEnded(block.number);
+        return true;
       }
 
       if(now > startDate && now <= endDate) {
         if (state != SaleState.SALE && checkBalanceContract() >= minimumTokensToStart ) {
           state = SaleState.SALE;
           CrowdsaleStarted(block.number);
+          return true;
         }
       } else {
         if (state != SaleState.ENDED && now > endDate) {
           state = SaleState.ENDED;
           CrowdsaleEnded(block.number);
+          return true;
         }
       }
+      return false;
     }
 
     function processTransaction(address _contributor, uint _amount) internal {
