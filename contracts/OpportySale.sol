@@ -66,21 +66,21 @@ contract OpportySale is Pausable {
     function OpportySale(address tokenAddress, address walletAddress, uint start, uint end) {
       token = OpportyToken(tokenAddress);
       state = SaleState.NEW;
-      SOFTCAP  = 1000 * 1 ether;
-      HARDCAP = 80000 * 1 ether;
-      price = 0.0002 * 1 ether;
+      SOFTCAP   = 1000 * 1 ether;
+      HARDCAP   = 80000 * 1 ether;
+      price     = 0.0002 * 1 ether;
       startDate = start;
-      endDate = end;
+      endDate   = end;
       minimalContribution = 0.5 * 1 ether;
 
-      firstBonusPhase = startDate.add(1 days);
-      firstExtraBonus = 20;
-      secondBonusPhase = startDate.add(3 days);
-      secondExtraBonus = 15;
-      thirdBonusPhase = startDate.add(8 days);
-      thirdExtraBonus = 10;
-      fourBonusPhase = startDate.add(14 days);
-      fourExtraBonus = 5;
+      firstBonusPhase   = startDate.add(1 days);
+      firstExtraBonus   = 20;
+      secondBonusPhase  = startDate.add(3 days);
+      secondExtraBonus  = 15;
+      thirdBonusPhase   = startDate.add(8 days);
+      thirdExtraBonus   = 10;
+      fourBonusPhase    = startDate.add(14 days);
+      fourExtraBonus    = 5;
 
       wallet = walletAddress;
     }
@@ -88,10 +88,10 @@ contract OpportySale is Pausable {
     function setStartDate(uint date) onlyOwner {
       require(state == SaleState.NEW);
       startDate = date;
-      firstBonusPhase = startDate.add(1 days);
-      secondBonusPhase = startDate.add(3 days);
-      thirdBonusPhase = startDate.add(8 days);
-      fourBonusPhase = startDate.add(14 days);
+      firstBonusPhase   = startDate.add(1 days);
+      secondBonusPhase  = startDate.add(3 days);
+      thirdBonusPhase   = startDate.add(8 days);
+      fourBonusPhase    = startDate.add(14 days);
     }
 
     function setEndDate(uint date) onlyOwner {
@@ -118,7 +118,7 @@ contract OpportySale is Pausable {
 
       bool chstate = checkCrowdsaleState();
 
-      if(state == SaleState.SALE) {
+      if (state == SaleState.SALE) {
         processTransaction(msg.sender, msg.value);
       }
       else {
@@ -129,7 +129,7 @@ contract OpportySale is Pausable {
     function refundTransaction(bool _stateChanged) internal {
       if (_stateChanged) {
          msg.sender.transfer(msg.value);
-       }else{
+       } else{
          revert();
        }
     }
@@ -257,7 +257,7 @@ contract OpportySale is Pausable {
 
     }
 
-    function claimEthIfFailed() whenNotPaused {
+    function refund() whenNotPaused {
       require(now > endDate && ethRaised < SOFTCAP);
       require(contributorList[msg.sender].contributionAmount > 0);
       require(!hasClaimedEthWhenFail[msg.sender]);
@@ -356,6 +356,29 @@ contract OpportySale is Pausable {
     function getContribution(address acc) constant returns (uint) {
       if (contributorList[acc].isActive) {
         return contributorList[acc].contributionAmount;
+      }
+      return 0;
+    }
+
+    // @return true if crowdsale event has ended
+    function hasEnded() public constant returns (bool) {
+      return now > endDate || state == SaleState.ENDED;
+    }
+    function getTokenBalance() constant returns (uint) {
+      return token.balanceOf(this);
+    }
+    function getCurrentBonus() public constant returns (uint) {
+      if (now >= startDate && now <= firstBonusPhase ) {
+        return firstExtraBonus;
+      }
+      if (now > startDate && now <= secondBonusPhase ) {
+        return secondExtraBonus;
+      }
+      if (now > startDate && now <= thirdBonusPhase ) {
+        return thirdExtraBonus;
+      }
+      if (now > startDate && now <= fourBonusPhase ) {
+        return fourExtraBonus;
       }
       return 0;
     }
