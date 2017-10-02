@@ -245,7 +245,7 @@ function initializeBlockChain()
 {
 
   echo -e "\n ~~ Initialize the Block Chain's foundation block" ;
-  geth --datadir "${WORK_DIR}/${NODE_DIR}" --networkid ${NETWORK_ID} --verbosity 0 init ${WORK_DIR}/${NODE_DIR}/genesis.json
+  geth --datadir "${WORK_DIR}/${NODE_DIR}" --networkid ${NETWORK_ID} --verbosity 3 init ${WORK_DIR}/${NODE_DIR}/genesis.json
 
 };
 
@@ -258,7 +258,7 @@ function createDAGfile()
   if [ ! -f ~/.ethash/full-R23-290decd9548b62a8 ]; then
     echo -e "\n ~~ Creating DAG file.";
     mkdir -p ~/.ethash;
-    geth  --datadir "${WORK_DIR}/${NODE_DIR}" --networkid ${NETWORK_ID} --verbosity 0  makedag 0 ~/.ethash;
+    geth  --datadir "${WORK_DIR}/${NODE_DIR}" --networkid ${NETWORK_ID} --verbosity 3  makedag 0 ~/.ethash;
   fi;
 
 };
@@ -310,7 +310,7 @@ function transferEthToMainAccounts()
     done
 
     echo -e "\n ~~ Start mining 10 block";
-    STATUS=$(geth --datadir "${WORK_DIR}/${NODE_DIR}" --networkid ${NETWORK_ID} --verbosity 0 --exec "  miner.start(2); admin.sleepBlocks(10); miner.stop();" console);
+    STATUS=$(geth --datadir "${WORK_DIR}/${NODE_DIR}" --networkid ${NETWORK_ID} --verbosity 3 --exec "  miner.start(2); admin.sleepBlocks(10); miner.stop();" console);
     echo " ~~~~ Status mining : ${STATUS}";
 
   else
