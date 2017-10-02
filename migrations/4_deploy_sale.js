@@ -15,11 +15,11 @@ module.exports = function(deployer, network) {
       .then(() => {
         tokenAddress = OpportyToken.address;
 
-        return deployer.deploy(OpportySale, tokenAddress, walletAddress, start, end)
+        return deployer.deploy(OpportySale, tokenAddress, walletAddress, start, end, tokenAddress)
           .then(() => OpportySale.deployed());
       })
       .then((instanceOppSale) => {
-        let contractABI = abi.rawEncode(['address', 'address', 'uint', 'uint'], [tokenAddress, walletAddress, start, end, tokenAddress]);
+        let contractABI = abi.rawEncode(['address', 'address', 'uint', 'uint', 'tokenAddress'], [tokenAddress, walletAddress, start, end, tokenAddress]);
 
         console.log('\n\n\nOpportySaleInfo\n');
         console.log('tokenAddress:  ', tokenAddress);
