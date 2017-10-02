@@ -32,7 +32,7 @@ contract OpportySale is Pausable {
     uint private fourBonusPhase;
     uint private fourExtraBonus;
 
-    uint private minimumTokensToStart = 480000000 * (10 ** 18);
+    uint private minimumTokensToStart = 400000000 * (10 ** 18);
 
     struct ContributorData {
       bool isActive;
@@ -168,9 +168,7 @@ contract OpportySale is Pausable {
       }
 
       if(now > startDate && now <= endDate) {
-        if (state != SaleState.SALE && checkBalanceContract() >= minimumTokensToStart ) {
-          state = SaleState.SALE;
-          CrowdsaleStarted(block.number);
+        if (state == SaleState.SALE && checkBalanceContract() >= minimumTokensToStart ) {
           return true;
         }
       } else {
@@ -196,7 +194,9 @@ contract OpportySale is Pausable {
         returnAmount = _amount - maxContribution;
       }
 
-      if (ethRaised + contributionAmount >= SOFTCAP && SOFTCAP > ethRaised) SoftCapReached(block.number);
+      if (ethRaised + contributionAmount >= SOFTCAP && SOFTCAP > ethRaised) {
+        SoftCapReached(block.number);
+      }
 
       if (contributorList[_contributor].isActive == false) {
         contributorList[_contributor].isActive = true;
@@ -206,19 +206,23 @@ contract OpportySale is Pausable {
       } else {
         contributorList[_contributor].contributionAmount += contributionAmount;
       }
+
       ethRaised += contributionAmount;
 
       FundTransfered(_contributor, contributionAmount);
 
-      uint tokenAmount = contributionAmount.div(price);
-      uint timeBonus = calculateBonusForHours(tokenAmount);
+      uint tokenAmount  = contributionAmount.div(price);
+      uint timeBonus    = calculateBonusForHours(tokenAmount);
 
       if (tokenAmount > 0) {
         contributorList[_contributor].tokensIssued += tokenAmount.add(timeBonus);
         contributorList[_contributor].bonusAmount += timeBonus;
         totalTokens += tokenAmount.add(timeBonus);
       }
-      if (returnAmount != 0) _contributor.transfer(returnAmount);
+
+      if (returnAmount != 0) {
+        _contributor.transfer(returnAmount);
+      }
     }
 
     function calculateBonusForHours(uint256 _tokens) internal returns(uint256) {
@@ -326,6 +330,14 @@ contract OpportySale is Pausable {
       require(now > endDate);
       require(contributorIndexes[nextContributorToClaim] == 0x0);
       msg.sender.transfer(this.balance);
+    }
+
+    function startCrowdsale() onlyOwner  {
+      require(now > startDate && now <= endDate);
+      require(state == SaleState.NEW);
+      require(checkBalanceContract() >= minimumTokensToStart);
+      state = SaleState.SALE;
+      CrowdsaleStarted(block.number);
     }
 
     function getAccountsNumber() constant returns (uint) {
