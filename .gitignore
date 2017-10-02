@@ -1,0 +1,12 @@
+# IntelliJ project files
+.idea
+*.iml
+out
+gen
+.DS_Store
+
+/build
+/package-lock.json
+/geth.log
+/ethernode
+/node_modules
