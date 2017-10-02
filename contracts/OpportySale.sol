@@ -21,6 +21,7 @@ contract OpportySale is Pausable {
     uint private minimalContribution;
 
     address private wallet;
+    address private holdContract;
 
     uint private firstBonusPhase;
     uint private firstExtraBonus;
@@ -63,11 +64,11 @@ contract OpportySale is Pausable {
 
     SaleState private state;
 
-    function OpportySale(address tokenAddress, address walletAddress, uint start, uint end) {
+    function OpportySale(address tokenAddress, address walletAddress, uint start, uint end, address holdCont) {
       token = OpportyToken(tokenAddress);
       state = SaleState.NEW;
-      SOFTCAP  = 1000 * 1 ether;
-      HARDCAP = 80000 * 1 ether;
+      SOFTCAP  = 10 * 1 ether;
+      HARDCAP = 80 * 1 ether;
       price = 0.0002 * 1 ether;
       startDate = start;
       endDate = end;
@@ -83,6 +84,7 @@ contract OpportySale is Pausable {
       fourExtraBonus = 5;
 
       wallet = walletAddress;
+      holdContract = holdCont;
     }
 
     function setStartDate(uint date) onlyOwner {
@@ -132,6 +134,24 @@ contract OpportySale is Pausable {
        }else{
          revert();
        }
+    }
+
+    function releaseTokens() onlyOwner {
+      require (state == SaleState.ENDED);
+
+      uint cbalance = checkBalanceContract();
+
+      require (cbalance != 0);
+
+      if (ethRaised >= SOFTCAP) {
+        if (token.transfer(holdContract, cbalance ) ) {
+          TokensTransfered(holdContract , cbalance );
+        }
+      } else {
+        if (token.transfer(msg.sender, cbalance) ) {
+          TokensTransfered(msg.sender , cbalance );
+        }
+      }
     }
 
 
