@@ -19,7 +19,7 @@ module.exports = function(deployer, network) {
           .then(() => OpportySale.deployed());
       })
       .then((instanceOppSale) => {
-        let contractABI = abi.rawEncode(['address', 'address', 'uint', 'uint', 'tokenAddress'], [tokenAddress, walletAddress, start, end, tokenAddress]);
+        let contractABI = abi.rawEncode(['address', 'address', 'uint', 'uint', 'address'], [tokenAddress, walletAddress, start, end, tokenAddress]);
 
         console.log('\n\n\nOpportySaleInfo\n');
         console.log('tokenAddress:  ', tokenAddress);
