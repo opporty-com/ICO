@@ -19,13 +19,14 @@ module.exports = function(deployer, network) {
           .then(() => OpportySale.deployed());
       })
       .then((instanceOppSale) => {
-        let contractABI = abi.rawEncode(['address', 'address', 'uint', 'uint'], [tokenAddress, walletAddress, start, end]);
+        let contractABI = abi.rawEncode(['address', 'address', 'uint', 'uint'], [tokenAddress, walletAddress, start, end, tokenAddress]);
 
         console.log('\n\n\nOpportySaleInfo\n');
         console.log('tokenAddress:  ', tokenAddress);
         console.log('walletAddress: ', walletAddress);
         console.log('start:         ', moment.unix(start).format('DD-MM-YYYY HH:mm:ss'));
         console.log('end:           ', moment.unix(end).format('DD-MM-YYYY HH:mm:ss'));
+        console.log('holdContract:  ', tokenAddress);
 
         console.log('\nContract:');
         console.log('Address:', OpportySale.address);
