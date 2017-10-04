@@ -61,6 +61,8 @@ contract OpportySale is Pausable {
     event Refunded(address ref, uint amount);
     event ErrorSendingETH(address to, uint amount);
     event WithdrawedEthToWallet(uint amount);
+    event ManualChangeStartDate(uint beforeDate, uint afterDate);
+    event ManualChangeEndDate(uint beforeDate, uint afterDate);
 
     SaleState private state;
 
@@ -89,16 +91,22 @@ contract OpportySale is Pausable {
 
     function setStartDate(uint date) onlyOwner {
       require(state == SaleState.NEW);
+      require(date < endDate);
+      uint oldStartDate = startDate;
       startDate = date;
       firstBonusPhase   = startDate.add(1 days);
       secondBonusPhase  = startDate.add(3 days);
       thirdBonusPhase   = startDate.add(8 days);
       fourBonusPhase    = startDate.add(14 days);
+      ManualChangeStartDate(oldStartDate, date);
     }
 
     function setEndDate(uint date) onlyOwner {
       require(state == SaleState.NEW || state == SaleState.SALE);
+      require(date > now && date > startDate);
+      uint oldEndDate = endDate;
       endDate = date;
+      ManualChangeEndDate(oldEndDate, date);
     }
 
     function setSoftCap(uint softCap) onlyOwner {
