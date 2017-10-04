@@ -12,13 +12,13 @@ contract OpportyHold is Ownable {
 	address public postFreezeDestination;
 
 	// Freezer Data
-	uint256 public firstAllocation;
-	uint256 public secondAllocation;
-	uint256 public firstThawDate;
-	uint256 public secondThawDate;
+	uint public firstAllocation;
+	uint public secondAllocation;
+	uint public firstThawDate;
+	uint public secondThawDate;
 	bool public firstUnlocked;
 
-	function CATFreezer(
+	function OpportyHold(
 		address _OppToken,
 		address _postFreezeDestination,
     uint firstDate,
