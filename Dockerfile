@@ -6,4 +6,4 @@ WORKDIR /usr/src/app
 
 COPY package.json /usr/src/app
 
-RUN cd ../ && npm i && npm i -g nodemon && npm i -g truffle
+RUN npm i && npm i -g nodemon && npm i -g truffle
