@@ -62,7 +62,7 @@ contract OpportyHold is Ownable {
 		OpportyToken(OppToken).transfer(msg.sender, tokens);
 	}
 
-	function changeCATDestinationAddress(address _newAddress) external {
+	function changeDestinationAddress(address _newAddress) external {
 		if (msg.sender != postFreezeDestination) revert();
 		postFreezeDestination = _newAddress;
 	}
