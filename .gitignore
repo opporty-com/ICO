@@ -8,5 +8,9 @@ gen
 /build
 /package-lock.json
 /geth.log
-/ethernode
 /node_modules
+/ethernode/rinkeby/password
+/data/ethernode/
+!/data/ethernode/.gitkeep
+/data/truffle/
+!/data/truffle/.gitkeep
