@@ -40,12 +40,12 @@ contract OpportyHold is Ownable {
 
 		firstUnlocked = true;
 
-		uint256 totalBalance = OpportyToken(OppToken).balanceOf(this);
+		uint totalBalance = OpportyToken(OppToken).balanceOf(this);
 
 		firstAllocation = totalBalance.div(2);
 		secondAllocation = totalBalance.sub(firstAllocation);
 
-		uint256 tokens = firstAllocation;
+		uint tokens = firstAllocation;
 		firstAllocation = 0;
 
 		OpportyToken(OppToken).transfer(msg.sender, tokens);
@@ -56,7 +56,7 @@ contract OpportyHold is Ownable {
 		if (msg.sender != postFreezeDestination) revert();
 		if (now < secondThawDate) revert();
 
-		uint256 tokens = secondAllocation;
+		uint tokens = secondAllocation;
 		secondAllocation = 0;
 
 		OpportyToken(OppToken).transfer(msg.sender, tokens);
@@ -66,4 +66,5 @@ contract OpportyHold is Ownable {
 		if (msg.sender != postFreezeDestination) revert();
 		postFreezeDestination = _newAddress;
 	}
+  
 }
