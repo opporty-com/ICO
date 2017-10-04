@@ -5,7 +5,7 @@ const OpportyToken  = artifacts.require("./OpportyToken.sol");
 const OpportySale   = artifacts.require("./OpportySale.sol");
 
 module.exports = function(deployer, network) {
-  if(network == "privatenet") {
+  if(network == "development") {
     let tokenAddress; // type address OpportyToken
     let walletAddress = web3.eth.accounts[web3.eth.accounts.length - 1]; // type address Multisig
     let start = moment().unix();//type uint set timestamp start Crowdsale

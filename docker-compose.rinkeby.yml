@@ -1,0 +1,5 @@
+version: '3.3'
+services:
+
+  ethernode:
+    entrypoint: "/root/rinkeby.sh"
