@@ -5,8 +5,6 @@ import "./OpportyToken.sol";
 import "./Ownable.sol";
 
 contract OpportyHold is Ownable {
-	using SafeMath for uint256;
-
 	// Addresses and contracts
 	address public OppToken;
 	address public postFreezeDestination;
