@@ -65,7 +65,7 @@ contract OpportySale is Pausable {
     event ManualChangeEndDate(uint beforeDate, uint afterDate);
     event TokensTransferedToHold(address hold, uint amount);
     event TokensTransferedToOwner(address hold, uint amount);
-    
+
     SaleState private state;
 
     function OpportySale(address tokenAddress, address walletAddress, uint start, uint end, address holdCont) {
@@ -266,8 +266,6 @@ contract OpportySale is Pausable {
       }
 
     }
-
-
 
     function batchReturnTokens(uint _numberOfReturns) onlyOwner whenNotPaused {
       require((now > endDate && ethRaised >= SOFTCAP )  || (ethRaised >= HARDCAP)  );
