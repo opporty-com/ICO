@@ -328,9 +328,9 @@ contract OpportySale is Pausable {
       require(this.balance != 0);
       require(ethRaised >= SOFTCAP);
       require(msg.sender == wallet);
-
-      wallet.transfer(this.balance);
-      WithdrawedEthToWallet(this.balance);
+      uint bal = this.balance;
+      wallet.transfer(bal);
+      WithdrawedEthToWallet(bal);
     }
 
     function withdrawRemainingBalanceForManualRecovery() onlyOwner  {
