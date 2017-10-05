@@ -27,6 +27,11 @@ contract OpportyHold  {
 		firstUnlocked = false;
 	}
 
+	function getBalance() constant returns (uint)
+    {
+      return OpportyToken(OppToken).balanceOf(this);
+    }
+
 	function unlockFirst() external {
 		require (!firstUnlocked);
 		require (msg.sender == postFreezeDestination);
