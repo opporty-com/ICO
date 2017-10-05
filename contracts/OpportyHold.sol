@@ -13,22 +13,21 @@ contract OpportyHold is Ownable {
 
 	// Freezer Data
 	uint public firstAllocation;
-	uint public secondAllocation;
+
 	uint public firstThawDate;
-	uint public secondThawDate;
+
 	bool public firstUnlocked;
 
 	function OpportyHold(
 		address _OppToken,
 		address _postFreezeDestination,
-    uint firstDate,
-    uint secondDate
+    uint firstDate
 	) {
 		OppToken = _OppToken;
 		postFreezeDestination = _postFreezeDestination;
 
 		firstThawDate = now + firstDate * 1 days;  // One year from now
-		secondThawDate = now +  secondDate * 1 days;  // Two years from now
+		
 
 		firstUnlocked = false;
 	}
@@ -42,24 +41,7 @@ contract OpportyHold is Ownable {
 
 		uint totalBalance = OpportyToken(OppToken).balanceOf(this);
 
-		firstAllocation = totalBalance.div(2);
-		secondAllocation = totalBalance.sub(firstAllocation);
-
-		uint tokens = firstAllocation;
-		firstAllocation = 0;
-
-		OpportyToken(OppToken).transfer(msg.sender, tokens);
-	}
-
-	function unlockSecond() external {
-		if (!firstUnlocked) revert();
-		if (msg.sender != postFreezeDestination) revert();
-		if (now < secondThawDate) revert();
-
-		uint tokens = secondAllocation;
-		secondAllocation = 0;
-
-		OpportyToken(OppToken).transfer(msg.sender, tokens);
+		OpportyToken(OppToken).transfer(msg.sender, totalBalance);
 	}
 
 	function changeDestinationAddress(address _newAddress) external {
