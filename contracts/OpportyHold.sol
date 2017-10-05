@@ -33,9 +33,9 @@ contract OpportyHold is Ownable {
 	}
 
 	function unlockFirst() external {
-		if (firstUnlocked) revert();
-		if (msg.sender != postFreezeDestination) revert();
-		if (now < firstThawDate) revert();
+		require (!firstUnlocked);
+		require (msg.sender == postFreezeDestination);
+		require (now >= firstThawDate);
 
 		firstUnlocked = true;
 
@@ -45,7 +45,7 @@ contract OpportyHold is Ownable {
 	}
 
 	function changeDestinationAddress(address _newAddress) external {
-		if (msg.sender != postFreezeDestination) revert();
+		require (msg.sender == postFreezeDestination);
 		postFreezeDestination = _newAddress;
 	}
   
