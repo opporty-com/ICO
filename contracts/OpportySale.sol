@@ -33,7 +33,7 @@ contract OpportySale is Pausable {
   // address where funds are collected
   address private wallet;
   // address where funds will be frozen
-  address private holdContract;
+  address public holdContract;
 
   /* bonus from time */
   uint private firstBonusPhase;
