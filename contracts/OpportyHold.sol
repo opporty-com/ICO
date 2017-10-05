@@ -21,14 +21,13 @@ contract OpportyHold is Ownable {
 	function OpportyHold(
 		address _OppToken,
 		address _postFreezeDestination,
-    uint firstDate
+        uint firstDate
 	) {
 		OppToken = _OppToken;
 		postFreezeDestination = _postFreezeDestination;
 
 		firstThawDate = now + firstDate * 1 days;  // One year from now
 		
-
 		firstUnlocked = false;
 	}
 
