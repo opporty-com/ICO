@@ -63,7 +63,9 @@ contract OpportySale is Pausable {
     event WithdrawedEthToWallet(uint amount);
     event ManualChangeStartDate(uint beforeDate, uint afterDate);
     event ManualChangeEndDate(uint beforeDate, uint afterDate);
-
+    event TokensTransferedToHold(address hold, uint amount);
+    event TokensTransferedToOwner(address hold, uint amount);
+    
     SaleState private state;
 
     function OpportySale(address tokenAddress, address walletAddress, uint start, uint end, address holdCont) {
@@ -153,11 +155,11 @@ contract OpportySale is Pausable {
 
       if (ethRaised >= SOFTCAP) {
         if (token.transfer(holdContract, cbalance ) ) {
-          TokensTransfered(holdContract , cbalance );
+          TokensTransferedToHold(holdContract , cbalance );
         }
       } else {
         if (token.transfer(msg.sender, cbalance) ) {
-          TokensTransfered(msg.sender , cbalance );
+          TokensTransferedToOwner(msg.sender , cbalance );
         }
       }
     }
@@ -264,6 +266,8 @@ contract OpportySale is Pausable {
       }
 
     }
+
+
 
     function batchReturnTokens(uint _numberOfReturns) onlyOwner whenNotPaused {
       require((now > endDate && ethRaised >= SOFTCAP )  || (ethRaised >= HARDCAP)  );
