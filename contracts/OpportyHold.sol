@@ -1,10 +1,8 @@
 pragma solidity ^0.4.15;
 
-import "./SafeMath.sol";
 import "./OpportyToken.sol";
-import "./Ownable.sol";
 
-contract OpportyHold is Ownable {
+contract OpportyHold  {
 	// Addresses and contracts
 	address public OppToken;
 	address public postFreezeDestination;
