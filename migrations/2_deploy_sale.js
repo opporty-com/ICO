@@ -4,12 +4,13 @@ const abi           = require('ethereumjs-abi');
 const OpportyToken  = artifacts.require("./OpportyToken.sol");
 const OpportyHold   = artifacts.require("./OpportyHold.sol");
 const OpportySale   = artifacts.require("./OpportySale.sol");
-
+const OpportyPresale   = artifacts.require("./OpportyPresale.sol");
 module.exports = function(deployer, network) {
+  console.log(network);
   if(network == "development") {
     /* OpportySale */
     let tokenAddress; // type address OpportyToken
-    let walletAddress = web3.eth.accounts[web3.eth.accounts.length - 1]; // type address Multisig
+    let walletAddress = "0xdD86E182b176F4C14E8B0c7D3b7637D60F7cbb39"; // type address Multisig
     let start = moment().unix();//type uint set timestamp start Crowdsale
     let end   = moment(start * 1000).add(30, 'minute').unix(); // type uint set timestamp finish Crowdsale
 
@@ -28,8 +29,13 @@ module.exports = function(deployer, network) {
       .then(() => {
         holdCont = OpportyHold.address;
 
-        return deployer.deploy(OpportySale, tokenAddress, walletAddress, start, end, holdCont)
-          .then(() => OpportySale.deployed());
+        return deployer.deploy(OpportyPresale).then(()=> {
+          console.log("Presale Deployed\n");
+          return deployer.deploy(OpportySale, tokenAddress, walletAddress, start, end, holdCont)
+            .then(() => OpportySale.deployed());
+        });
+
+
       })
       .then((instanceOppSale) => {
         let contractSaleABI = abi.rawEncode(['address', 'address', 'uint', 'uint', 'address'], [tokenAddress, walletAddress, start, end, holdCont]);
