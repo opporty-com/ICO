@@ -34,7 +34,7 @@ contract OpportyPresale is Pausable {
   struct WhitelistContributor {
     bool isActive;
     uint invAmount;
-    uint holdPeriod;
+    uint8 holdPeriod;
     uint8 bonus;
     bool payed;
   }
@@ -74,7 +74,7 @@ contract OpportyPresale is Pausable {
     state = SaleState.SALE;
   }
 
-  function addToWhitelist(address inv, uint amount, uint holdPeriod, uint8 bonus) public onlyOwner {
+  function addToWhitelist(address inv, uint amount, uint8 holdPeriod, uint8 bonus) public onlyOwner {
     require(state == SaleState.NEW);
 
     if (whiteList[inv].isActive == false) {
