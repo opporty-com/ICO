@@ -8,7 +8,7 @@ contract OpportySale is Pausable {
 
   using SafeMath for uint256;
 
-  OpportyToken token;
+  OpportyToken public token;
 
   // minimum goal ETH
   uint private SOFTCAP;
@@ -31,7 +31,7 @@ contract OpportySale is Pausable {
   uint private minimalContribution;
 
   // address where funds are collected
-  address private wallet;
+  address public wallet;
   // address where funds will be frozen
   address public holdContract;
 
@@ -58,7 +58,7 @@ contract OpportySale is Pausable {
   enum SaleState  { NEW, SALE, ENDED }
   SaleState private state;
 
-  mapping(address => ContributorData) private contributorList;
+  mapping(address => ContributorData) public contributorList;
   uint private nextContributorIndex;
   uint private nextContributorToClaim;
   uint private nextContributorToTransferTokens;
@@ -232,10 +232,10 @@ contract OpportySale is Pausable {
    */
   function refundTransaction(bool _stateChanged) internal {
     if (_stateChanged) {
-       msg.sender.transfer(msg.value);
-     } else{
-       revert();
-     }
+      msg.sender.transfer(msg.value);
+    } else{
+      revert();
+    }
   }
 
   /**
@@ -411,7 +411,7 @@ contract OpportySale is Pausable {
   }
 
   function calculateMaxContribution() constant returns (uint) {
-     return HARDCAP - ethRaised;
+    return HARDCAP - ethRaised;
   }
 
   function getSoftCap() constant returns(uint) {
@@ -434,27 +434,6 @@ contract OpportySale is Pausable {
     return endDate;
   }
 
-  function getTokensIssued(address acc) constant returns (uint) {
-    if (contributorList[acc].isActive) {
-      return contributorList[acc].tokensIssued;
-    }
-    return 0;
-  }
-
-  function getBonus(address acc) constant returns (uint) {
-    if (contributorList[acc].isActive) {
-      return contributorList[acc].bonusAmount;
-    }
-    return 0;
-  }
-
-  function getContribution(address acc) constant returns (uint) {
-    if (contributorList[acc].isActive) {
-      return contributorList[acc].contributionAmount;
-    }
-    return 0;
-  }
-
   // @return true if crowdsale event has ended
   function hasEnded() public constant returns (bool) {
     return now > endDate || state == SaleState.ENDED;
@@ -468,6 +447,9 @@ contract OpportySale is Pausable {
    * @dev return current bonus percent
    */
   function getCurrentBonus() public constant returns (uint) {
+    if(now > endDate || state == SaleState.ENDED) {
+      return 0;
+    }
     if (now >= startDate && now <= firstBonusPhase ) {
       return firstExtraBonus;
     }
