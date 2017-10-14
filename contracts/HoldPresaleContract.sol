@@ -42,7 +42,7 @@ contract HoldPresaleContract  {
     fourthDate = startDate.add(1 years);
   }
 
-  function addHolder(address holder, uint tokens, uint8 timed) {
+  function addHolder(address holder, uint tokens, uint8 timed) public onlyOwner {
     if (holderList[holder].isActive == false) {
       holderList[holder].isActive = true;
       holderList[holder].tokens = tokens;
