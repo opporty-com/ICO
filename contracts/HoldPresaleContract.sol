@@ -9,9 +9,7 @@ contract HoldPresaleContract  {
 
   // Freezer Data
   uint public firstAllocation;
-
   uint public firstThawDate;
-
   bool public firstUnlocked;
 
   function OpportyHold(
@@ -26,6 +24,16 @@ contract HoldPresaleContract  {
 
     firstUnlocked = false;
   }
+
+
+
+  function addHolder(address holder, uint tokens, uint time) {
+    
+  }
+
+
+
+
 
   function getBalance() constant returns (uint)
     {

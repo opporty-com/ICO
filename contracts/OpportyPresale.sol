@@ -10,10 +10,7 @@ contract OpportyPresale is Pausable {
 
   OpportyToken public token;
 
-  HoldPresaleContract public holdContract1;
-  HoldPresaleContract public holdContract2;
-  HoldPresaleContract public holdContract3;
-  HoldPresaleContract public holdContract4;
+  HoldPresaleContract public holdContract;
 
   enum SaleState  { NEW, SALE, ENDED }
   SaleState public state;
@@ -25,8 +22,13 @@ contract OpportyPresale is Pausable {
   address private wallet;
 
   // total ETH collected
-  uint private ethRaised;
+  uint public ethRaised;
 
+  uint private price;
+
+  uint public tokenRaised;
+
+  event TokensTransfered(address contributor , uint amount);
   event WithdrawedEthToWallet(uint amount);
   event ManualChangeStartDate(uint beforeDate, uint afterDate);
   event ManualChangeEndDate(uint beforeDate, uint afterDate);
@@ -49,23 +51,17 @@ contract OpportyPresale is Pausable {
     address walletAddress,
     uint start,
     uint end,
-    address holdCont1,
-    address holdCont2,
-    address holdCont3,
-    address holdCont4)
+    address holdCont)
   {
     token = OpportyToken(tokenAddress);
     state = SaleState.NEW;
 
     startDate = start;
     endDate   = end;
-
+    price     = 0.0002 * 1 ether;
     wallet = walletAddress;
 
-    holdContract1 = HoldPresaleContract(holdCont1);
-    holdContract2 = HoldPresaleContract(holdCont2);
-    holdContract3 = HoldPresaleContract(holdCont3);
-    holdContract4 = HoldPresaleContract(holdCont4);
+    holdContract = HoldPresaleContract(holdCont);
   }
 
   function startPresale() public onlyOwner
@@ -133,6 +129,24 @@ contract OpportyPresale is Pausable {
     whiteList[msg.sender].payed = true;
     contribution[msg.sender] += msg.value;
     ethRaised += msg.value;
+    uint tokenAmount  = msg.value.div(price);
+    tokenAmount += tokenAmount.mul(whiteList[msg.sender].bonus).div(100);
+    holdContract.addHolder(msg.sender, tokenAmount, whiteList[msg.sender].holdPeriod);
+    tokenRaised += tokenAmount;
+  }
+
+  function getBalanceContract() internal returns (uint) {
+    return token.balanceOf(this);
+  }
+
+  function sendTokensToHold() public onlyOwner
+  {
+    require(state == SaleState.ENDED);
+    require(getBalanceContract() >= tokenRaised);
+    uint sum = tokenRaised * (10 ** 18);
+    if (token.transfer(holdContract, sum )) {
+      TokensTransfered(holdContract, sum );
+    }
   }
 
 
