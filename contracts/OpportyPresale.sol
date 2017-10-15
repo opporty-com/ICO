@@ -26,8 +26,7 @@ contract OpportyPresale is Pausable {
   uint private price;
 
   uint public tokenRaised;
-
-  uint public tokenNeedToStart;
+  bool public tokensTransferredToHold;
 
   /* Events */
   event SaleStarted(uint blockNumber);
@@ -120,9 +119,6 @@ contract OpportyPresale is Pausable {
       whiteList[inv].holdPeriod = holdPeriod;
       whiteList[inv].bonus = bonus;
     }
-
-    uint tokenAmount  = amount.div(price);
-    tokenNeedToStart += tokenAmount.mul(whiteList[inv].bonus).div(100);
   }
 
 
@@ -161,8 +157,17 @@ contract OpportyPresale is Pausable {
     require(getBalanceContract() >= tokenRaised);
     uint sum = tokenRaised * (10 ** 18);
     if (token.transfer(holdContract, sum )) {
+      tokensTransferredToHold = true;
       TokensTransferedToHold(holdContract, sum );
     }
+  }
+
+  function getTokensBack() public onlyOwner
+  {
+    require(state == SaleState.ENDED);
+    uint balance;
+    balance = getBalanceContract() ;
+    token.transfer(msg.sender, balance);
   }
 
 
@@ -170,6 +175,7 @@ contract OpportyPresale is Pausable {
     require(this.balance != 0);
     require(state == SaleState.ENDED);
     require(msg.sender == wallet);
+    require(tokensTransferredToHold);
     uint bal = this.balance;
     wallet.transfer(bal);
     WithdrawedEthToWallet(bal);
