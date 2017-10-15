@@ -134,7 +134,7 @@ contract OpportyPresale is Pausable {
     require(now < endDate);
 
     require(whiteList[msg.sender].isActive);
-    require((whiteList[msg.sender].payed == false && whiteList[msg.sender].invAmount >= msg.value) || whiteList[msg.sender].payed);
+    require((whiteList[msg.sender].payed == false && whiteList[msg.sender].invAmount <= msg.value) || whiteList[msg.sender].payed);
 
     whiteList[msg.sender].payed = true;
     contribution[msg.sender] += msg.value;
