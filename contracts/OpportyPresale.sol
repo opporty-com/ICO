@@ -165,6 +165,7 @@ contract OpportyPresale is Pausable {
   function getTokensBack() public onlyOwner
   {
     require(state == SaleState.ENDED);
+    require(tokensTransferredToHold);
     uint balance;
     balance = getBalanceContract() ;
     token.transfer(msg.sender, balance);
