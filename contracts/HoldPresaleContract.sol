@@ -1,8 +1,9 @@
 pragma solidity ^0.4.15;
 
 import "./OpportyToken.sol";
+import "./Ownable.sol";
 
-contract HoldPresaleContract  {
+contract HoldPresaleContract is Ownable {
   using SafeMath for uint256;
   // Addresses and contracts
   OpportyToken public OppToken;

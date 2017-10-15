@@ -28,6 +28,8 @@ contract OpportyPresale is Pausable {
 
   uint public tokenRaised;
 
+  uint public tokenNeedToStart;
+
   /* Events */
   event SaleStarted(uint blockNumber);
   event FundTransfered(address contrib, uint amount);
@@ -131,6 +133,12 @@ contract OpportyPresale is Pausable {
   function() whenNotPaused public payable {
     require(msg.value > 0);
     require(state == SaleState.SALE);
+
+    if (now > endDate) {
+      state = SaleState.ENDED;
+      msg.sender.transfer(msg.value);
+      return ;
+    }
     require(now < endDate);
 
     require(whiteList[msg.sender].isActive);
