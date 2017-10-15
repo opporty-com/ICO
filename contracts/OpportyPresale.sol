@@ -190,6 +190,14 @@ contract OpportyPresale is Pausable {
     WithdrawedEthToWallet(bal);
   }
 
+  function setEndSaleDate(uint date) public onlyOwner {
+    require(state == SaleState.NEW);
+    require(date > now);
+    uint oldEndDate = endSaleDate;
+    endSaleDate = date;
+    ManualChangeEndDate(oldEndDate, date);
+  }
+
   function setEndDate(uint date) public onlyOwner {
     require(state == SaleState.NEW || state == SaleState.SALE);
     require(date > now);
