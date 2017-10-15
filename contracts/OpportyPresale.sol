@@ -15,7 +15,6 @@ contract OpportyPresale is Pausable {
   enum SaleState  { NEW, SALE, ENDED }
   SaleState public state;
 
-  uint public startDate;
   uint public endDate;
 
   // address where funds are collected
@@ -34,7 +33,6 @@ contract OpportyPresale is Pausable {
   event SaleStarted(uint blockNumber);
   event FundTransfered(address contrib, uint amount);
   event WithdrawedEthToWallet(uint amount);
-  event ManualChangeStartDate(uint beforeDate, uint afterDate);
   event ManualChangeEndDate(uint beforeDate, uint afterDate);
   event TokensTransferedToHold(address hold, uint amount);
 
@@ -61,7 +59,6 @@ contract OpportyPresale is Pausable {
     token = OpportyToken(tokenAddress);
     state = SaleState.NEW;
 
-    startDate = start; // можно убрать т.к. нам это не нужно. мы можем вручную запустить и если что сделать паузу.
     endDate   = end;
     price     = 0.0002 * 1 ether;
     wallet = walletAddress;
@@ -178,18 +175,9 @@ contract OpportyPresale is Pausable {
     WithdrawedEthToWallet(bal);
   }
 
-
-  function setStartDate(uint date) public onlyOwner {
-    require(state == SaleState.NEW);
-    require(date < endDate);
-    uint oldStartDate = startDate;
-    startDate = date;
-    ManualChangeStartDate(oldStartDate, date);
-  }
-
   function setEndDate(uint date) public onlyOwner {
     require(state == SaleState.NEW || state == SaleState.SALE);
-    require(date > now && date > startDate);
+    require(date > now);
     uint oldEndDate = endDate;
     endDate = date;
     ManualChangeEndDate(oldEndDate, date);
