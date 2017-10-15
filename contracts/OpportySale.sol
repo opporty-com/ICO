@@ -3,6 +3,8 @@ pragma solidity ^0.4.15;
 import "./SafeMath.sol";
 import "./OpportyToken.sol";
 import "./Pausable.sol";
+import "./HoldPresaleContract.sol";
+import "./OpportyPresale.sol";
 
 contract OpportySale is Pausable {
 
@@ -33,7 +35,8 @@ contract OpportySale is Pausable {
   // address where funds are collected
   address public wallet;
   // address where funds will be frozen
-  address public holdContract;
+  HoldPresaleContract public holdContract;
+  OpportyPresale private presale;
 
   /* bonus from time */
   uint private firstBonusPhase;
@@ -82,8 +85,14 @@ contract OpportySale is Pausable {
   event TokensTransferedToHold(address hold, uint amount);
   event TokensTransferedToOwner(address hold, uint amount);
 
-
-  function OpportySale(address tokenAddress, address walletAddress, uint start, uint end, address holdCont) {
+  function OpportySale(
+    address tokenAddress,
+    address walletAddress,
+    uint start,
+    uint end,
+    address holdCont,
+    address presaleCont )
+  {
     token = OpportyToken(tokenAddress);
     state = SaleState.NEW;
     SOFTCAP   = 1000 * 1 ether;
@@ -103,7 +112,8 @@ contract OpportySale is Pausable {
     fourExtraBonus    = 5;
 
     wallet = walletAddress;
-    holdContract = holdCont;
+    holdContract = HoldPresaleContract(holdCont);
+    presale = OpportyPresale(presaleCont);
   }
 
   /* Setters */
@@ -373,6 +383,7 @@ contract OpportySale is Pausable {
     wallet.transfer(bal);
     WithdrawedEthToWallet(bal);
   }
+
   function withdrawRemainingBalanceForManualRecovery() onlyOwner  {
     require(this.balance != 0);
     require(now > endDate);
@@ -399,7 +410,8 @@ contract OpportySale is Pausable {
   }
 
   function getEthRaised() constant returns (uint) {
-    return ethRaised;
+    uint pre = presale.getEthRaised();
+    return pre + ethRaised;
   }
 
   function getTokensTotal() constant returns (uint) {

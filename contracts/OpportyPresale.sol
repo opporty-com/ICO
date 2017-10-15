@@ -16,6 +16,7 @@ contract OpportyPresale is Pausable {
   SaleState public state;
 
   uint public endDate;
+  uint public endSaleDate;
 
   // address where funds are collected
   address private wallet;
@@ -52,14 +53,15 @@ contract OpportyPresale is Pausable {
   function OpportyPresale(
     address tokenAddress,
     address walletAddress,
-    uint start,
     uint end,
-    address holdCont)
+    uint endSale,
+    address holdCont )
   {
     token = OpportyToken(tokenAddress);
     state = SaleState.NEW;
 
     endDate   = end;
+    endSaleDate = endSale;
     price     = 0.0002 * 1 ether;
     wallet = walletAddress;
 
@@ -124,7 +126,6 @@ contract OpportyPresale is Pausable {
     }
   }
 
-
   //@todo добавить перевод в статуса END
   function() whenNotPaused public payable {
     require(msg.value > 0);
@@ -145,7 +146,12 @@ contract OpportyPresale is Pausable {
     ethRaised += msg.value;
     uint tokenAmount  = msg.value.div(price);
     tokenAmount += tokenAmount.mul(whiteList[msg.sender].bonus).div(100);
-    holdContract.addHolder(msg.sender, tokenAmount, whiteList[msg.sender].holdPeriod);
+    uint timest;
+    if (whiteList[msg.sender].holdPeriod==1)  timest = endSaleDate.add(30 days);
+    if (whiteList[msg.sender].holdPeriod==3)  timest = endSaleDate.add(92 days);
+    if (whiteList[msg.sender].holdPeriod==6)  timest = endSaleDate.add(182 days);
+    if (whiteList[msg.sender].holdPeriod==12) timest = endSaleDate.add(1 years);
+    holdContract.addHolder(msg.sender, tokenAmount, whiteList[msg.sender].holdPeriod, timest);
     tokenRaised += tokenAmount;
     FundTransfered(msg.sender, msg.value);
   }
@@ -195,8 +201,9 @@ contract OpportyPresale is Pausable {
   function getTokenBalance() constant returns (uint) {
     return token.balanceOf(this);
   }
+
   // для вызова в sale контракте
-  function getEthRaised() constant returns (uint) {
+  function getEthRaised() constant external returns (uint)  {
     return ethRaised;
   }
 }

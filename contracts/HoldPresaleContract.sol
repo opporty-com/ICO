@@ -12,6 +12,7 @@ contract HoldPresaleContract is Ownable {
     bool isActive;
     uint tokens;
     uint8 holdPeriod;
+    uint holdPeriodTimestamp;
     bool withdrawed;
   }
 
@@ -38,13 +39,9 @@ contract HoldPresaleContract is Ownable {
     OppToken = OpportyToken(_OppToken);
 
     startDate = start;
-    firstDate = startDate.add(30 days);
-    secondDate = startDate.add(91 days);
-    thirdDate = startDate.add(182 days);
-    fourthDate = startDate.add(1 years);
   }
 
-  function addHolder(address holder, uint tokens, uint8 timed) public onlyOwner {
+  function addHolder(address holder, uint tokens, uint8 timed, uint timest) public onlyOwner {
     // добавить холд по таймстампу т.е. указывать с какого момента расхолдиться токен. Это позволит юзера просматривать инфу и знать точно когда.
     // предлогаю холд сразу в контракт передавать выситчыая его в самом контракте пресейла или сейла
     // uint oneMonth = 1 * 30 days;
@@ -53,11 +50,13 @@ contract HoldPresaleContract is Ownable {
       holderList[holder].isActive = true;
       holderList[holder].tokens = tokens;
       holderList[holder].holdPeriod = timed;
+      holderList[holder].holdPeriodTimestamp = timest;
       holderIndexes[holderIndex] = holder;
       holderIndex++;
     } else {
       holderList[holder].tokens = tokens;
       holderList[holder].holdPeriod = timed;
+      holderList[holder].holdPeriodTimestamp = timest;
     }
     Hold(holder, tokens, timed);
   }
@@ -72,14 +71,13 @@ contract HoldPresaleContract is Ownable {
     bool tosent = false;
 
     if (holderList[contributor].isActive && !holderList[contributor].withdrawed) {
-      // if (now >= holderList[contributor].holdPeriodTimestamp)
-      if ( holderList[contributor].holdPeriod == 1  && now > firstDate) tosent = true;
-      if ( holderList[contributor].holdPeriod == 3  && now > secondDate) tosent = true;
-      if ( holderList[contributor].holdPeriod == 6  && now > thirdDate) tosent = true;
-      if ( holderList[contributor].holdPeriod == 12 && now > fourthDate) tosent = true;
-      if ( tosent == true && OppToken.transfer( msg.sender, holderList[contributor].tokens ) ) {
-        holderList[contributor].withdrawed = true;
-        TokensTransfered(contributor,  holderList[contributor].tokens);
+      if (now >= holderList[contributor].holdPeriodTimestamp) {
+        if ( OppToken.transfer( msg.sender, holderList[contributor].tokens ) ) {
+          holderList[contributor].withdrawed = true;
+          TokensTransfered(contributor,  holderList[contributor].tokens);
+        }
+      } else {
+        revert();
       }
     } else {
       revert();
