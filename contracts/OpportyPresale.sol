@@ -34,6 +34,7 @@ contract OpportyPresale is Pausable {
   event WithdrawedEthToWallet(uint amount);
   event ManualChangeEndDate(uint beforeDate, uint afterDate);
   event TokensTransferedToHold(address hold, uint amount);
+  event AddedToWhiteList(address inv, uint amount, uint8 holdPeriod, uint8 bonus);
 
   struct WhitelistContributor {
     bool isActive;
@@ -114,10 +115,12 @@ contract OpportyPresale is Pausable {
 
       whitelistIndexes[whitelistIndex] = inv;
       whitelistIndex++;
+      AddedToWhiteList(inv, whiteList[inv].invAmount, whiteList[inv].holdPeriod,  whiteList[inv].bonus);
     } else {
       whiteList[inv].invAmount = amount;
       whiteList[inv].holdPeriod = holdPeriod;
       whiteList[inv].bonus = bonus;
+      AddedToWhiteList(inv, whiteList[inv].invAmount, whiteList[inv].holdPeriod,  whiteList[inv].bonus);
     }
   }
 
@@ -170,7 +173,6 @@ contract OpportyPresale is Pausable {
     balance = getBalanceContract() ;
     token.transfer(msg.sender, balance);
   }
-
 
   function withdrawEth() {
     require(this.balance != 0);
