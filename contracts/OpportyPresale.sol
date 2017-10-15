@@ -28,10 +28,13 @@ contract OpportyPresale is Pausable {
 
   uint public tokenRaised;
 
-  event TokensTransfered(address contributor , uint amount);
+  /* Events */
+  event SaleStarted(uint blockNumber);
+  event FundTransfered(address contrib, uint amount);
   event WithdrawedEthToWallet(uint amount);
   event ManualChangeStartDate(uint beforeDate, uint afterDate);
   event ManualChangeEndDate(uint beforeDate, uint afterDate);
+  event TokensTransferedToHold(address hold, uint amount);
 
   struct WhitelistContributor {
     bool isActive;
@@ -56,7 +59,7 @@ contract OpportyPresale is Pausable {
     token = OpportyToken(tokenAddress);
     state = SaleState.NEW;
 
-    startDate = start;
+    startDate = start; // можно убрать т.к. нам это не нужно. мы можем вручную запустить и если что сделать паузу.
     endDate   = end;
     price     = 0.0002 * 1 ether;
     wallet = walletAddress;
@@ -68,13 +71,15 @@ contract OpportyPresale is Pausable {
   {
     require (state == SaleState.NEW);
     state = SaleState.SALE;
+    SaleStarted(block.number);
   }
 
   function addToWhitelist(address inv, uint amount, uint8 holdPeriod, uint8 bonus) public onlyOwner {
-    require(state == SaleState.NEW);
+    require(state == SaleState.NEW || state == SaleState.SALE);
 
     if (whiteList[inv].isActive == false) {
       whiteList[inv].isActive = true;
+      whiteList[inv].payed = false;
       whiteList[inv].invAmount = amount;
       whiteList[inv].holdPeriod = holdPeriod;
 
@@ -116,16 +121,21 @@ contract OpportyPresale is Pausable {
       whiteList[inv].holdPeriod = holdPeriod;
       whiteList[inv].bonus = bonus;
     }
+
+    uint tokenAmount  = amount.div(price);
+    tokenNeedToStart += tokenAmount.mul(whiteList[inv].bonus).div(100);
   }
 
 
+  //@todo добавить перевод в статуса END
   function() whenNotPaused public payable {
     require(msg.value > 0);
     require(state == SaleState.SALE);
     require(now < endDate);
 
     require(whiteList[msg.sender].isActive);
-    require(whiteList[msg.sender].invAmount <= msg.value || whiteList[msg.sender].payed ) ;
+    require((whiteList[msg.sender].payed == false && whiteList[msg.sender].invAmount >= msg.value) || whiteList[msg.sender].payed);
+
     whiteList[msg.sender].payed = true;
     contribution[msg.sender] += msg.value;
     ethRaised += msg.value;
@@ -133,6 +143,7 @@ contract OpportyPresale is Pausable {
     tokenAmount += tokenAmount.mul(whiteList[msg.sender].bonus).div(100);
     holdContract.addHolder(msg.sender, tokenAmount, whiteList[msg.sender].holdPeriod);
     tokenRaised += tokenAmount;
+    FundTransfered(msg.sender, msg.value);
   }
 
   function getBalanceContract() internal returns (uint) {
@@ -145,7 +156,7 @@ contract OpportyPresale is Pausable {
     require(getBalanceContract() >= tokenRaised);
     uint sum = tokenRaised * (10 ** 18);
     if (token.transfer(holdContract, sum )) {
-      TokensTransfered(holdContract, sum );
+      TokensTransferedToHold(holdContract, sum );
     }
   }
 
@@ -176,4 +187,11 @@ contract OpportyPresale is Pausable {
     ManualChangeEndDate(oldEndDate, date);
   }
 
+  function getTokenBalance() constant returns (uint) {
+    return token.balanceOf(this);
+  }
+  // для вызова в sale контракте
+  function getEthRaised() constant returns (uint) {
+    return ethRaised;
+  }
 }

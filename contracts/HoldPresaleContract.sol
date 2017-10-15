@@ -27,6 +27,7 @@ contract HoldPresaleContract  {
   uint fourthDate;
 
   event TokensTransfered(address contributor , uint amount);
+  event Hold(address contributor , uint amount, uint8 holdPeriod);
 
   function OpportyHold(
     address _OppToken,
@@ -43,6 +44,10 @@ contract HoldPresaleContract  {
   }
 
   function addHolder(address holder, uint tokens, uint8 timed) public onlyOwner {
+    // добавить холд по таймстампу т.е. указывать с какого момента расхолдиться токен. Это позволит юзера просматривать инфу и знать точно когда.
+    // предлогаю холд сразу в контракт передавать выситчыая его в самом контракте пресейла или сейла
+    // uint oneMonth = 1 * 30 days;
+    // holderList[contributor].holdPeriodTimestamp = startDate.add(timed * oneMonth)
     if (holderList[holder].isActive == false) {
       holderList[holder].isActive = true;
       holderList[holder].tokens = tokens;
@@ -53,6 +58,7 @@ contract HoldPresaleContract  {
       holderList[holder].tokens = tokens;
       holderList[holder].holdPeriod = timed;
     }
+    Hold(holder, tokens, timed);
   }
 
   function getBalance() constant returns (uint)
@@ -65,6 +71,7 @@ contract HoldPresaleContract  {
     bool tosent = false;
 
     if (holderList[contributor].isActive && !holderList[contributor].withdrawed) {
+      // if (now >= holderList[contributor].holdPeriodTimestamp)
       if ( holderList[contributor].holdPeriod == 1  && now > firstDate) tosent = true;
       if ( holderList[contributor].holdPeriod == 3  && now > secondDate) tosent = true;
       if ( holderList[contributor].holdPeriod == 6  && now > thirdDate) tosent = true;
