@@ -49,7 +49,7 @@ contract OpportySale is Pausable {
   uint private fourExtraBonus;
 
   //minimum of tokens that must be on the contract for the start
-  uint private minimumTokensToStart = 650000000 * (10 ** 18);
+  uint private minimumTokensToStart = 300000000 * (10 ** 18);
 
   struct ContributorData {
     bool isActive;
@@ -96,11 +96,11 @@ contract OpportySale is Pausable {
     token = OpportyToken(tokenAddress);
     state = SaleState.NEW;
     SOFTCAP   = 1000 * 1 ether;
-    HARDCAP   = 80000 * 1 ether;
+    HARDCAP   = 50000 * 1 ether;
     price     = 0.0002 * 1 ether;
     startDate = start;
     endDate   = end;
-    minimalContribution = 0.5 * 1 ether;
+    minimalContribution = 0.3 * 1 ether;
 
     firstBonusPhase   = startDate.add(1 days);
     firstExtraBonus   = 20;
@@ -260,6 +260,7 @@ contract OpportySale is Pausable {
 
     if (ethRaised >= SOFTCAP) {
       if (token.transfer(holdContract, cbalance ) ) {
+        holdContract.addHolder(msg.sender, cbalance, 1, endDate.add(1 years) );
         TokensTransferedToHold(holdContract , cbalance );
       }
     } else {
