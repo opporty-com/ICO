@@ -385,7 +385,7 @@ contract OpportySale is Pausable {
     WithdrawedEthToWallet(bal);
   }
 
-  function withdrawRemainingBalanceForManualRecovery() onlyOwner  {
+  function withdrawRemainingBalanceForManualRecovery() onlyOwner {
     require(this.balance != 0);
     require(now > endDate);
     require(contributorIndexes[nextContributorToClaim] == 0x0);

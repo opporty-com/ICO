@@ -127,7 +127,8 @@ contract OpportyPresale is Pausable {
   }
 
   //@todo добавить перевод в статуса END
-  function() whenNotPaused public payable {
+  function() whenNotPaused public payable
+  {
     require(msg.value > 0);
     require(state == SaleState.SALE);
 
@@ -156,7 +157,8 @@ contract OpportyPresale is Pausable {
     FundTransfered(msg.sender, msg.value);
   }
 
-  function getBalanceContract() internal returns (uint) {
+  function getBalanceContract() internal returns (uint)
+  {
     return token.balanceOf(this);
   }
 
@@ -180,7 +182,8 @@ contract OpportyPresale is Pausable {
     token.transfer(msg.sender, balance);
   }
 
-  function withdrawEth() {
+  function withdrawEth()
+  {
     require(this.balance != 0);
     require(state == SaleState.ENDED);
     require(msg.sender == wallet);
@@ -190,7 +193,8 @@ contract OpportyPresale is Pausable {
     WithdrawedEthToWallet(bal);
   }
 
-  function setEndSaleDate(uint date) public onlyOwner {
+  function setEndSaleDate(uint date) public onlyOwner
+  {
     require(state == SaleState.NEW);
     require(date > now);
     uint oldEndDate = endSaleDate;
@@ -198,7 +202,8 @@ contract OpportyPresale is Pausable {
     ManualChangeEndDate(oldEndDate, date);
   }
 
-  function setEndDate(uint date) public onlyOwner {
+  function setEndDate(uint date) public onlyOwner
+  {
     require(state == SaleState.NEW || state == SaleState.SALE);
     require(date > now);
     uint oldEndDate = endDate;
@@ -206,12 +211,14 @@ contract OpportyPresale is Pausable {
     ManualChangeEndDate(oldEndDate, date);
   }
 
-  function getTokenBalance() constant returns (uint) {
+  function getTokenBalance() constant returns (uint)
+  {
     return token.balanceOf(this);
   }
 
   // для вызова в sale контракте
-  function getEthRaised() constant external returns (uint)  {
+  function getEthRaised() constant external returns (uint)
+  {
     return ethRaised;
   }
 }

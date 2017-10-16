@@ -20,25 +20,13 @@ contract HoldPresaleContract is Ownable {
   mapping(uint => address) private holderIndexes;
   uint private holderIndex;
 
-  uint private startDate;
-
-  // Freezer Data
-  uint firstDate;
-  uint secondDate;
-  uint thirdDate;
-  uint fourthDate;
-
   event TokensTransfered(address contributor , uint amount);
   event Hold(address contributor , uint amount, uint8 holdPeriod);
 
-  function OpportyHold(
-    address _OppToken,
-    address _postFreezeDestination,
-    uint start
+  function HoldPresaleContract(
+    address _OppToken
   ) {
     OppToken = OpportyToken(_OppToken);
-
-    startDate = start;
   }
 
   function addHolder(address holder, uint tokens, uint8 timed, uint timest) public onlyOwner {
