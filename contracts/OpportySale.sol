@@ -168,7 +168,7 @@ contract OpportySale is Pausable {
    * @return false when contract does not accept tokens
    */
   function checkCrowdsaleState() internal returns (bool){
-    if (ethRaised >= HARDCAP && state != SaleState.ENDED) {
+    if (getEthRaised() >= HARDCAP && state != SaleState.ENDED) {
       state = SaleState.ENDED;
       HardCapReached(block.number); // Close the crowdsale
       CrowdsaleEnded(block.number);
@@ -204,8 +204,8 @@ contract OpportySale is Pausable {
       contributionAmount = maxContribution;
       returnAmount = _amount - maxContribution;
     }
-
-    if (ethRaised + contributionAmount >= SOFTCAP && SOFTCAP > ethRaised) {
+    uint ethrai = getEthRaised() ;
+    if (ethrai + contributionAmount >= SOFTCAP && SOFTCAP > ethrai) {
       SoftCapReached(block.number);
     }
 
@@ -258,7 +258,7 @@ contract OpportySale is Pausable {
 
     require (cbalance != 0);
 
-    if (ethRaised >= SOFTCAP) {
+    if (getEthRaised() >= SOFTCAP) {
       if (token.transfer(holdContract, cbalance ) ) {
         holdContract.addHolder(msg.sender, cbalance, 1, endDate.add(182 days) );
         TokensTransferedToHold(holdContract , cbalance );
@@ -298,7 +298,8 @@ contract OpportySale is Pausable {
    * @dev if crowdsale is successful, investors can claim token here
    */
   function getTokens() whenNotPaused {
-    require((now > endDate && ethRaised >= SOFTCAP )  || (ethRaised >= HARDCAP)  );
+    uint er =  getEthRaised();
+    require((now > endDate && er >= SOFTCAP )  || ( er >= HARDCAP)  );
     require(state == SaleState.ENDED);
     require(contributorList[msg.sender].tokensIssued > 0);
     require(!hasWithdrawedTokens[msg.sender]);
@@ -313,7 +314,8 @@ contract OpportySale is Pausable {
 
   }
   function batchReturnTokens(uint _numberOfReturns) onlyOwner whenNotPaused {
-    require((now > endDate && ethRaised >= SOFTCAP )  || (ethRaised >= HARDCAP)  );
+    uint er = getEthRaised();
+    require((now > endDate && er >= SOFTCAP )  || (er >= HARDCAP)  );
     require(state == SaleState.ENDED);
 
     address currentParticipantAddress;
@@ -340,7 +342,7 @@ contract OpportySale is Pausable {
    * @dev if crowdsale is unsuccessful, investors can claim refunds here
    */
   function refund() whenNotPaused {
-    require(now > endDate && ethRaised < SOFTCAP);
+    require(now > endDate && getEthRaised() < SOFTCAP);
     require(contributorList[msg.sender].contributionAmount > 0);
     require(!hasClaimedEthWhenFail[msg.sender]);
 
@@ -353,7 +355,7 @@ contract OpportySale is Pausable {
     }
   }
   function batchReturnEthIfFailed(uint _numberOfReturns) onlyOwner whenNotPaused {
-    require(now > endDate && ethRaised < SOFTCAP);
+    require(now > endDate && getEthRaised() < SOFTCAP);
     address currentParticipantAddress;
     uint contribution;
     for (uint cnt = 0; cnt < _numberOfReturns; cnt++) {
@@ -378,7 +380,7 @@ contract OpportySale is Pausable {
    */
   function withdrawEth() {
     require(this.balance != 0);
-    require(ethRaised >= SOFTCAP);
+    require(getEthRaised() >= SOFTCAP);
     require(msg.sender == wallet);
     uint bal = this.balance;
     wallet.transfer(bal);
@@ -424,7 +426,7 @@ contract OpportySale is Pausable {
   }
 
   function calculateMaxContribution() constant returns (uint) {
-    return HARDCAP - ethRaised;
+    return HARDCAP - getEthRaised();
   }
 
   function getSoftCap() constant returns(uint) {
