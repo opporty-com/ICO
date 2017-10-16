@@ -85,11 +85,8 @@ contract OpportyPresale is Pausable {
   function addToWhitelist(address inv, uint amount, uint8 holdPeriod, uint8 bonus) public onlyOwner {
     require(state == SaleState.NEW || state == SaleState.SALE);
     require(holdPeriod == 1 || holdPeriod == 3 || holdPeriod == 6 || holdPeriod == 12);
-    require(bonus > 0);
 
     amount = amount * (10 ** 18);
-
-    require(amount >= 0.3 ether);
 
     if (whiteList[inv].isActive == false) {
       whiteList[inv].isActive = true;
