@@ -48,7 +48,7 @@ contract OpportyPresale is Pausable {
   mapping(address => WhitelistContributor) public whiteList;
   mapping(uint => address) private whitelistIndexes;
   uint private whitelistIndex;
-  
+
   function OpportyPresale(
     address tokenAddress,
     address walletAddress,
@@ -178,7 +178,7 @@ contract OpportyPresale is Pausable {
   function getTokensBack() public onlyOwner
   {
     require(state == SaleState.ENDED);
-    require(tokensTransferredToHold);
+    require(tokensTransferredToHold == true);
     uint balance;
     balance = getBalanceContract() ;
     token.transfer(msg.sender, balance);
@@ -189,7 +189,7 @@ contract OpportyPresale is Pausable {
     require(this.balance != 0);
     require(state == SaleState.ENDED);
     require(msg.sender == wallet);
-    require(tokensTransferredToHold);
+    require(tokensTransferredToHold == true);
     uint bal = this.balance;
     wallet.transfer(bal);
     WithdrawedEthToWallet(bal);

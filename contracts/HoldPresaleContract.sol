@@ -42,7 +42,7 @@ contract HoldPresaleContract is Ownable {
       holderIndexes[holderIndex] = holder;
       holderIndex++;
     } else {
-      holderList[holder].tokens = tokens;
+      holderList[holder].tokens += tokens;
       holderList[holder].holdPeriod = timed;
       holderList[holder].holdPeriodTimestamp = timest;
     }
