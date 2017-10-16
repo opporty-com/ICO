@@ -22,11 +22,10 @@ contract HoldPresaleContract is Ownable {
   uint private holderIndex;
 
   event TokensTransfered(address contributor , uint amount);
-  event Hold(address contributor , uint amount, uint8 holdPeriod);
-  event Log(address log);
-  function HoldPresaleContract(
-    address _OppToken
-  ) {
+  event Hold(address sender, address contributor, uint amount, uint8 holdPeriod);
+
+  /* constructor */
+  function HoldPresaleContract(address _OppToken) {
     OppToken = OpportyToken(_OppToken);
   }
 
@@ -36,11 +35,6 @@ contract HoldPresaleContract is Ownable {
   }
 
   function addHolder(address holder, uint tokens, uint8 timed, uint timest) external  {
-    // добавить холд по таймстампу т.е. указывать с какого момента расхолдиться токен. Это позволит юзера просматривать инфу и знать точно когда.
-    // предлогаю холд сразу в контракт передавать выситчыая его в самом контракте пресейла или сейла
-    // uint oneMonth = 1 * 30 days;
-    // holderList[contributor].holdPeriodTimestamp = startDate.add(timed * oneMonth)
-    Log(msg.sender);
     if (holderList[holder].isActive == false) {
       holderList[holder].isActive = true;
       holderList[holder].tokens = tokens;
@@ -53,11 +47,10 @@ contract HoldPresaleContract is Ownable {
       holderList[holder].holdPeriod = timed;
       holderList[holder].holdPeriodTimestamp = timest;
     }
-    Hold(holder, tokens, timed);
+    Hold(msg.sender, holder, tokens, timed);
   }
 
-  function getBalance() constant returns (uint)
-  {
+  function getBalance() constant returns (uint) {
     return OppToken.balanceOf(this);
   }
 

@@ -30,6 +30,7 @@ contract OpportyPresale is Pausable {
 
   /* Events */
   event SaleStarted(uint blockNumber);
+  event SaleEnded(uint blockNumber);
   event FundTransfered(address contrib, uint amount);
   event WithdrawedEthToWallet(uint amount);
   event ManualChangeEndDate(uint beforeDate, uint afterDate);
@@ -50,6 +51,7 @@ contract OpportyPresale is Pausable {
   mapping(uint => address) private whitelistIndexes;
   uint private whitelistIndex;
 
+  /* constructor */
   function OpportyPresale(
     address tokenAddress,
     address walletAddress,
@@ -60,101 +62,78 @@ contract OpportyPresale is Pausable {
     token = OpportyToken(tokenAddress);
     state = SaleState.NEW;
 
-    endDate   = end;
+    endDate     = end;
     endSaleDate = endSale;
-    price     = 0.0002 * 1 ether;
-    wallet = walletAddress;
+    price       = 0.0002 * 1 ether;
+    wallet      = walletAddress;
 
     holdContract = HoldPresaleContract(holdCont);
   }
 
-  function startPresale() public onlyOwner
-  {
-    require (state == SaleState.NEW);
+  function startPresale() public onlyOwner {
+    require(state == SaleState.NEW);
     state = SaleState.SALE;
     SaleStarted(block.number);
   }
 
+  function endPresale() public onlyOwner {
+    require(state == SaleState.SALE);
+    state = SaleState.ENDED;
+    SaleEnded(block.number);
+  }
+
   function addToWhitelist(address inv, uint amount, uint8 holdPeriod, uint8 bonus) public onlyOwner {
     require(state == SaleState.NEW || state == SaleState.SALE);
+    require(holdPeriod == 1 || holdPeriod == 3 || holdPeriod == 6 || holdPeriod == 12);
+    require(bonus > 0);
+
+    amount = amount * (10 ** 18);
+
+    require(amount >= 0.3 ether);
 
     if (whiteList[inv].isActive == false) {
       whiteList[inv].isActive = true;
-      whiteList[inv].payed = false;
-      whiteList[inv].invAmount = amount;
-      whiteList[inv].holdPeriod = holdPeriod;
-
-      if (whiteList[inv].holdPeriod==1)  whiteList[inv].holdTimestamp = endSaleDate.add(30 days); else
-      if (whiteList[inv].holdPeriod==3)  whiteList[inv].holdTimestamp = endSaleDate.add(92 days); else
-      if (whiteList[inv].holdPeriod==6)  whiteList[inv].holdTimestamp = endSaleDate.add(182 days); else
-      if (whiteList[inv].holdPeriod==12) whiteList[inv].holdTimestamp = endSaleDate.add(1 years);
-
-      // calculation bonus amount regarding table
-      if (amount < 100 ether) {
-        if (holdPeriod == 1) whiteList[inv].bonus = 21;
-        if (holdPeriod == 3) whiteList[inv].bonus = 22;
-        if (holdPeriod == 6) whiteList[inv].bonus = 25;
-        if (holdPeriod == 12) whiteList[inv].bonus = 30;
-      } else if (amount < 1000 ether) {
-        if (holdPeriod == 1) whiteList[inv].bonus = 22;
-        if (holdPeriod == 3) whiteList[inv].bonus = 23;
-        if (holdPeriod == 6) whiteList[inv].bonus = 25;
-        if (holdPeriod == 12) whiteList[inv].bonus = 35;
-      } else if (amount < 1650 ether) {
-        if (holdPeriod == 1) whiteList[inv].bonus = 23;
-        if (holdPeriod == 3) whiteList[inv].bonus = 24;
-        if (holdPeriod == 6) whiteList[inv].bonus = 30;
-        if (holdPeriod == 12) whiteList[inv].bonus = 40;
-      } else if (amount < 3300 ether) {
-        if (holdPeriod == 1) whiteList[inv].bonus = 25;
-        if (holdPeriod == 3) whiteList[inv].bonus = 30;
-        if (holdPeriod == 6) whiteList[inv].bonus = 35;
-        if (holdPeriod == 12) whiteList[inv].bonus = 50;
-      } else {
-        if (holdPeriod == 1) whiteList[inv].bonus = 30;
-        if (holdPeriod == 3) whiteList[inv].bonus = 40;
-        if (holdPeriod == 6) whiteList[inv].bonus = 50;
-        if (holdPeriod == 12) whiteList[inv].bonus = 60;
-      }
-
-      if (bonus>0)
-        whiteList[inv].bonus = bonus;
-
+      whiteList[inv].payed    = false;
       whitelistIndexes[whitelistIndex] = inv;
       whitelistIndex++;
-      AddedToWhiteList(inv, whiteList[inv].invAmount, whiteList[inv].holdPeriod,  whiteList[inv].bonus);
-    } else {
-      whiteList[inv].invAmount = amount;
-      whiteList[inv].holdPeriod = holdPeriod;
-      if (whiteList[inv].holdPeriod==1)  whiteList[inv].holdTimestamp = endSaleDate.add(1 hours); else
-      if (whiteList[inv].holdPeriod==3)  whiteList[inv].holdTimestamp = endSaleDate.add(5 hours); else
-      if (whiteList[inv].holdPeriod==6)  whiteList[inv].holdTimestamp = endSaleDate.add(182 days); else
-      if (whiteList[inv].holdPeriod==12) whiteList[inv].holdTimestamp = endSaleDate.add(1 years);
-      whiteList[inv].bonus = bonus;
-      AddedToWhiteList(inv, whiteList[inv].invAmount, whiteList[inv].holdPeriod,  whiteList[inv].bonus);
     }
+
+    whiteList[inv].invAmount  = amount;
+    whiteList[inv].holdPeriod = holdPeriod;
+    whiteList[inv].bonus = bonus;
+
+    if (whiteList[inv].holdPeriod==1)  whiteList[inv].holdTimestamp = endSaleDate.add(30 days); else
+    if (whiteList[inv].holdPeriod==3)  whiteList[inv].holdTimestamp = endSaleDate.add(92 days); else
+    if (whiteList[inv].holdPeriod==6)  whiteList[inv].holdTimestamp = endSaleDate.add(182 days); else
+    if (whiteList[inv].holdPeriod==12) whiteList[inv].holdTimestamp = endSaleDate.add(1 years);
+
+    AddedToWhiteList(inv, whiteList[inv].invAmount, whiteList[inv].holdPeriod,  whiteList[inv].bonus);
   }
 
-  //@todo добавить перевод в статуса END
-  function() whenNotPaused public payable
-  {
+  function() whenNotPaused public payable {
     require(state == SaleState.SALE);
     require(msg.value >= 0.3 ether);
+    require(whiteList[msg.sender].isActive);
 
     if (now > endDate) {
       state = SaleState.ENDED;
       msg.sender.transfer(msg.value);
       return ;
     }
+
     WhitelistContributor memory contrib = whiteList[msg.sender];
     require(contrib.invAmount <= msg.value || contrib.payed);
 
-    whiteList[msg.sender].payed = true;
+    if(whiteList[msg.sender].payed == false) {
+      whiteList[msg.sender].payed = true;
+    }
+
     ethRaised += msg.value;
 
     uint tokenAmount  = msg.value.div(price);
     tokenAmount += tokenAmount.mul(contrib.bonus).div(100);
     tokenAmount *= 10 ** 18;
+
     tokenRaised += tokenAmount;
 
     holdContract.addHolder(msg.sender, tokenAmount, contrib.holdPeriod, contrib.holdTimestamp);
@@ -162,13 +141,11 @@ contract OpportyPresale is Pausable {
     FundTransfered(msg.sender, msg.value);
   }
 
-  function getBalanceContract() internal returns (uint)
-  {
+  function getBalanceContract() internal returns (uint) {
     return token.balanceOf(this);
   }
 
-  function sendTokensToHold() public onlyOwner
-  {
+  function sendTokensToHold() public onlyOwner {
     require(state == SaleState.ENDED);
 
     require(getBalanceContract() >= tokenRaised);
@@ -179,8 +156,7 @@ contract OpportyPresale is Pausable {
     }
   }
 
-  function getTokensBack() public onlyOwner
-  {
+  function getTokensBack() public onlyOwner {
     require(state == SaleState.ENDED);
     require(tokensTransferredToHold == true);
     uint balance;
@@ -188,8 +164,7 @@ contract OpportyPresale is Pausable {
     token.transfer(msg.sender, balance);
   }
 
-  function withdrawEth()
-  {
+  function withdrawEth() {
     require(this.balance != 0);
     require(state == SaleState.ENDED);
     require(msg.sender == wallet);
@@ -199,8 +174,7 @@ contract OpportyPresale is Pausable {
     WithdrawedEthToWallet(bal);
   }
 
-  function setEndSaleDate(uint date) public onlyOwner
-  {
+  function setEndSaleDate(uint date) public onlyOwner {
     require(state == SaleState.NEW);
     require(date > now);
     uint oldEndDate = endSaleDate;
@@ -208,8 +182,7 @@ contract OpportyPresale is Pausable {
     ManualChangeEndDate(oldEndDate, date);
   }
 
-  function setEndDate(uint date) public onlyOwner
-  {
+  function setEndDate(uint date) public onlyOwner {
     require(state == SaleState.NEW || state == SaleState.SALE);
     require(date > now);
     uint oldEndDate = endDate;
@@ -217,14 +190,11 @@ contract OpportyPresale is Pausable {
     ManualChangeEndDate(oldEndDate, date);
   }
 
-  function getTokenBalance() constant returns (uint)
-  {
+  function getTokenBalance() constant returns (uint) {
     return token.balanceOf(this);
   }
 
-  // для вызова в sale контракте
-  function getEthRaised() constant external returns (uint)
-  {
+  function getEthRaised() constant external returns (uint) {
     return ethRaised;
   }
 }
