@@ -29,7 +29,7 @@ contract HoldPresaleContract is Ownable {
     OppToken = OpportyToken(_OppToken);
   }
 
-  function addHolder(address holder, uint tokens, uint8 timed, uint timest) public onlyOwner {
+  function addHolder(address holder, uint tokens, uint8 timed, uint timest) external  {
     // добавить холд по таймстампу т.е. указывать с какого момента расхолдиться токен. Это позволит юзера просматривать инфу и знать точно когда.
     // предлогаю холд сразу в контракт передавать выситчыая его в самом контракте пресейла или сейла
     // uint oneMonth = 1 * 30 days;
@@ -56,7 +56,6 @@ contract HoldPresaleContract is Ownable {
 
   function unlockTokens() external {
     address contributor = msg.sender;
-    bool tosent = false;
 
     if (holderList[contributor].isActive && !holderList[contributor].withdrawed) {
       if (now >= holderList[contributor].holdPeriodTimestamp) {

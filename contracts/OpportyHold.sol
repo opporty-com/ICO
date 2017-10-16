@@ -9,15 +9,13 @@ contract OpportyHold  {
 
   // Freezer Data
   uint public firstAllocation;
-
   uint public firstThawDate;
-
   bool public firstUnlocked;
 
   function OpportyHold(
     address _OppToken,
     address _postFreezeDestination,
-        uint firstDate
+    uint firstDate
   ) {
     OppToken = _OppToken;
     postFreezeDestination = _postFreezeDestination;
@@ -28,11 +26,12 @@ contract OpportyHold  {
   }
 
   function getBalance() constant returns (uint)
-    {
+  {
       return OpportyToken(OppToken).balanceOf(this);
-    }
+  }
 
-  function unlockFirst() external {
+  function unlockFirst() external
+  {
     require (!firstUnlocked);
     require (msg.sender == postFreezeDestination);
     require (now >= firstThawDate);
@@ -48,5 +47,5 @@ contract OpportyHold  {
     require (msg.sender == postFreezeDestination);
     postFreezeDestination = _newAddress;
   }
-  
+
 }

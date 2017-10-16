@@ -1,6 +1,5 @@
 pragma solidity ^0.4.15;
 
-import "./SafeMath.sol";
 import "./OpportyToken.sol";
 import "./Pausable.sol";
 import "./HoldPresaleContract.sol";
@@ -41,6 +40,7 @@ contract OpportyPresale is Pausable {
     bool isActive;
     uint invAmount;
     uint8 holdPeriod;
+    uint holdTimestamp;
     uint8 bonus;
     bool payed;
   }
@@ -48,8 +48,7 @@ contract OpportyPresale is Pausable {
   mapping(address => WhitelistContributor) public whiteList;
   mapping(uint => address) private whitelistIndexes;
   uint private whitelistIndex;
-  mapping(address => uint) public contribution;
-
+  
   function OpportyPresale(
     address tokenAddress,
     address walletAddress,
@@ -83,6 +82,11 @@ contract OpportyPresale is Pausable {
       whiteList[inv].payed = false;
       whiteList[inv].invAmount = amount;
       whiteList[inv].holdPeriod = holdPeriod;
+
+      if (whiteList[msg.sender].holdPeriod==1)  whiteList[inv].holdTimestamp = endSaleDate.add(30 days); else
+      if (whiteList[msg.sender].holdPeriod==3)  whiteList[inv].holdTimestamp = endSaleDate.add(92 days); else
+      if (whiteList[msg.sender].holdPeriod==6)  whiteList[inv].holdTimestamp = endSaleDate.add(182 days); else
+      if (whiteList[msg.sender].holdPeriod==12) whiteList[inv].holdTimestamp = endSaleDate.add(1 years);
 
       // calculation bonus amount regarding table
       if (amount < 100 ether) {
@@ -121,6 +125,10 @@ contract OpportyPresale is Pausable {
     } else {
       whiteList[inv].invAmount = amount;
       whiteList[inv].holdPeriod = holdPeriod;
+      if (whiteList[msg.sender].holdPeriod==1)  whiteList[inv].holdTimestamp = endSaleDate.add(30 days); else
+      if (whiteList[msg.sender].holdPeriod==3)  whiteList[inv].holdTimestamp = endSaleDate.add(92 days); else
+      if (whiteList[msg.sender].holdPeriod==6)  whiteList[inv].holdTimestamp = endSaleDate.add(182 days); else
+      if (whiteList[msg.sender].holdPeriod==12) whiteList[inv].holdTimestamp = endSaleDate.add(1 years);
       whiteList[inv].bonus = bonus;
       AddedToWhiteList(inv, whiteList[inv].invAmount, whiteList[inv].holdPeriod,  whiteList[inv].bonus);
     }
@@ -129,31 +137,25 @@ contract OpportyPresale is Pausable {
   //@todo добавить перевод в статуса END
   function() whenNotPaused public payable
   {
-    require(msg.value > 0);
     require(state == SaleState.SALE);
+    require(msg.value >= 0.3 ether);
 
     if (now > endDate) {
       state = SaleState.ENDED;
       msg.sender.transfer(msg.value);
       return ;
     }
-    require(now < endDate);
-
-    require(whiteList[msg.sender].isActive);
-    require((whiteList[msg.sender].payed == false && whiteList[msg.sender].invAmount <= msg.value) || whiteList[msg.sender].payed);
+    WhitelistContributor memory contrib = whiteList[msg.sender];
+    require(contrib.invAmount <= msg.value || contrib.payed);
 
     whiteList[msg.sender].payed = true;
-    contribution[msg.sender] += msg.value;
     ethRaised += msg.value;
+
     uint tokenAmount  = msg.value.div(price);
-    tokenAmount += tokenAmount.mul(whiteList[msg.sender].bonus).div(100);
-    uint timest;
-    if (whiteList[msg.sender].holdPeriod==1)  timest = endSaleDate.add(30 days);
-    if (whiteList[msg.sender].holdPeriod==3)  timest = endSaleDate.add(92 days);
-    if (whiteList[msg.sender].holdPeriod==6)  timest = endSaleDate.add(182 days);
-    if (whiteList[msg.sender].holdPeriod==12) timest = endSaleDate.add(1 years);
-    holdContract.addHolder(msg.sender, tokenAmount, whiteList[msg.sender].holdPeriod, timest);
+    tokenAmount += tokenAmount.mul(contrib.bonus).div(100);
     tokenRaised += tokenAmount;
+
+    holdContract.addHolder(msg.sender, tokenAmount, contrib.holdPeriod, contrib.holdTimestamp);
     FundTransfered(msg.sender, msg.value);
   }
 
