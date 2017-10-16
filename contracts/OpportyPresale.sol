@@ -35,6 +35,7 @@ contract OpportyPresale is Pausable {
   event ManualChangeEndDate(uint beforeDate, uint afterDate);
   event TokensTransferedToHold(address hold, uint amount);
   event AddedToWhiteList(address inv, uint amount, uint8 holdPeriod, uint8 bonus);
+  event AddedToHolder( address sender, uint tokenAmount, uint8 holdPeriod, uint holdTimestamp);
 
   struct WhitelistContributor {
     bool isActive;
@@ -83,10 +84,10 @@ contract OpportyPresale is Pausable {
       whiteList[inv].invAmount = amount;
       whiteList[inv].holdPeriod = holdPeriod;
 
-      if (whiteList[msg.sender].holdPeriod==1)  whiteList[inv].holdTimestamp = endSaleDate.add(30 days); else
-      if (whiteList[msg.sender].holdPeriod==3)  whiteList[inv].holdTimestamp = endSaleDate.add(92 days); else
-      if (whiteList[msg.sender].holdPeriod==6)  whiteList[inv].holdTimestamp = endSaleDate.add(182 days); else
-      if (whiteList[msg.sender].holdPeriod==12) whiteList[inv].holdTimestamp = endSaleDate.add(1 years);
+      if (whiteList[inv].holdPeriod==1)  whiteList[inv].holdTimestamp = endSaleDate.add(30 days); else
+      if (whiteList[inv].holdPeriod==3)  whiteList[inv].holdTimestamp = endSaleDate.add(92 days); else
+      if (whiteList[inv].holdPeriod==6)  whiteList[inv].holdTimestamp = endSaleDate.add(182 days); else
+      if (whiteList[inv].holdPeriod==12) whiteList[inv].holdTimestamp = endSaleDate.add(1 years);
 
       // calculation bonus amount regarding table
       if (amount < 100 ether) {
@@ -125,10 +126,10 @@ contract OpportyPresale is Pausable {
     } else {
       whiteList[inv].invAmount = amount;
       whiteList[inv].holdPeriod = holdPeriod;
-      if (whiteList[msg.sender].holdPeriod==1)  whiteList[inv].holdTimestamp = endSaleDate.add(30 days); else
-      if (whiteList[msg.sender].holdPeriod==3)  whiteList[inv].holdTimestamp = endSaleDate.add(92 days); else
-      if (whiteList[msg.sender].holdPeriod==6)  whiteList[inv].holdTimestamp = endSaleDate.add(182 days); else
-      if (whiteList[msg.sender].holdPeriod==12) whiteList[inv].holdTimestamp = endSaleDate.add(1 years);
+      if (whiteList[inv].holdPeriod==1)  whiteList[inv].holdTimestamp = endSaleDate.add(1 hours); else
+      if (whiteList[inv].holdPeriod==3)  whiteList[inv].holdTimestamp = endSaleDate.add(5 hours); else
+      if (whiteList[inv].holdPeriod==6)  whiteList[inv].holdTimestamp = endSaleDate.add(182 days); else
+      if (whiteList[inv].holdPeriod==12) whiteList[inv].holdTimestamp = endSaleDate.add(1 years);
       whiteList[inv].bonus = bonus;
       AddedToWhiteList(inv, whiteList[inv].invAmount, whiteList[inv].holdPeriod,  whiteList[inv].bonus);
     }
@@ -157,6 +158,7 @@ contract OpportyPresale is Pausable {
     tokenRaised += tokenAmount;
 
     holdContract.addHolder(msg.sender, tokenAmount, contrib.holdPeriod, contrib.holdTimestamp);
+    AddedToHolder(msg.sender, tokenAmount, contrib.holdPeriod, contrib.holdTimestamp);
     FundTransfered(msg.sender, msg.value);
   }
 

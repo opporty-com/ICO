@@ -7,6 +7,7 @@ contract HoldPresaleContract is Ownable {
   using SafeMath for uint256;
   // Addresses and contracts
   OpportyToken public OppToken;
+  address private presaleCont;
 
   struct Holder {
     bool isActive;
@@ -22,11 +23,16 @@ contract HoldPresaleContract is Ownable {
 
   event TokensTransfered(address contributor , uint amount);
   event Hold(address contributor , uint amount, uint8 holdPeriod);
-
+  event Log(address log);
   function HoldPresaleContract(
     address _OppToken
   ) {
     OppToken = OpportyToken(_OppToken);
+  }
+
+  function setPresaleCont(address pres)  public onlyOwner
+  {
+    presaleCont = pres;
   }
 
   function addHolder(address holder, uint tokens, uint8 timed, uint timest) external  {
@@ -34,6 +40,7 @@ contract HoldPresaleContract is Ownable {
     // предлогаю холд сразу в контракт передавать выситчыая его в самом контракте пресейла или сейла
     // uint oneMonth = 1 * 30 days;
     // holderList[contributor].holdPeriodTimestamp = startDate.add(timed * oneMonth)
+    Log(msg.sender);
     if (holderList[holder].isActive == false) {
       holderList[holder].isActive = true;
       holderList[holder].tokens = tokens;
