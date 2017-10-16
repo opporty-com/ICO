@@ -167,8 +167,9 @@ contract OpportyPresale is Pausable {
   function sendTokensToHold() public onlyOwner
   {
     require(state == SaleState.ENDED);
-    require(getBalanceContract() >= tokenRaised);
     uint sum = tokenRaised * (10 ** 18);
+    require(getBalanceContract() >= sum);
+
     if (token.transfer(holdContract, sum )) {
       tokensTransferredToHold = true;
       TokensTransferedToHold(holdContract, sum );
