@@ -153,6 +153,7 @@ contract OpportyPresale is Pausable {
 
     uint tokenAmount  = msg.value.div(price);
     tokenAmount += tokenAmount.mul(contrib.bonus).div(100);
+    tokenAmount *= 10 ** 18;
     tokenRaised += tokenAmount;
 
     holdContract.addHolder(msg.sender, tokenAmount, contrib.holdPeriod, contrib.holdTimestamp);
@@ -167,12 +168,12 @@ contract OpportyPresale is Pausable {
   function sendTokensToHold() public onlyOwner
   {
     require(state == SaleState.ENDED);
-    uint sum = tokenRaised * (10 ** 18);
-    require(getBalanceContract() >= sum);
 
-    if (token.transfer(holdContract, sum )) {
+    require(getBalanceContract() >= tokenRaised);
+
+    if (token.transfer(holdContract, tokenRaised )) {
       tokensTransferredToHold = true;
-      TokensTransferedToHold(holdContract, sum );
+      TokensTransferedToHold(holdContract, tokenRaised );
     }
   }
 
