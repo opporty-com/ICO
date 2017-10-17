@@ -19,10 +19,20 @@ contract HoldPresaleContract is Ownable {
 
   mapping(address => Holder) public holderList;
   mapping(uint => address) private holderIndexes;
+
+  mapping (uint => address) private assetOwners;
+  mapping (address => uint) private assetOwnersIndex;
+  uint public assetOwnersIndexes;
+
   uint private holderIndex;
 
   event TokensTransfered(address contributor , uint amount);
   event Hold(address sender, address contributor, uint amount, uint8 holdPeriod);
+
+  modifier onlyAssetsOwners() {
+    require(assetOwnersIndex[msg.sender] > 0);
+    _;
+  }
 
   /* constructor */
   function HoldPresaleContract(address _OppToken) {
@@ -34,7 +44,7 @@ contract HoldPresaleContract is Ownable {
     presaleCont = pres;
   }
 
-  function addHolder(address holder, uint tokens, uint8 timed, uint timest) external  {
+  function addHolder(address holder, uint tokens, uint8 timed, uint timest) onlyAssetsOwners external {
     if (holderList[holder].isActive == false) {
       holderList[holder].isActive = true;
       holderList[holder].tokens = tokens;
@@ -71,4 +81,18 @@ contract HoldPresaleContract is Ownable {
     }
   }
 
+  function addAssetsOwner(address _owner) public onlyOwner {
+    assetOwnersIndexes++;
+    assetOwners[assetOwnersIndexes] = _owner;
+    assetOwnersIndex[_owner] = assetOwnersIndexes;
+  }
+  function removeAssetsOwner(address _owner) public onlyOwner {
+    uint index = assetOwnersIndex[_owner];
+    delete assetOwnersIndex[_owner];
+    delete assetOwners[index];
+    assetOwnersIndexes--;
+  }
+  function getAssetsOwners(uint _index) onlyOwner public constant returns (address) {
+    return assetOwners[_index];
+  }
 }
