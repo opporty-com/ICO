@@ -25,14 +25,15 @@ contract OpportySaleBonus is Ownable {
   uint private sixthBonusPhase;
   uint private sixthExtraBonus;
 
-  /*
-  { amount: 20, startDay: 1,  endDay: 1,  title: '1st 24 hours' },
-  { amount: 15, startDay: 2,  endDay: 4,  title: '2-4 days' },
-  { amount: 12, startDay: 5,  endDay: 9,  title: '5-9 days' },
-  { amount: 10, startDay: 10, endDay: 14, title: '10-14 days' },
-  { amount: 8,  startDay: 15, endDay: 19, title: '15-19 days' },
-  { amount: 5,  startDay: 20, endDay: 24, title: '20-24 days' },
-  { amount: 0,  startDay: 25, endDay: 28, title: '25-28 days' },
+  /**
+  * @dev constructor
+  * 20% '1st 24 hours'
+  * 15% '2-4 days'
+  * 12% '5-9 days'
+  * 10% '10-14 days'
+  * 8%  '15-19 days'
+  * 5%  '20-24 days'
+  * 0%  '25-28 days'
   */
   function OpportySaleBonus(uint _startDate) {
     startDate = _startDate;
