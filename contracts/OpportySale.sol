@@ -6,6 +6,92 @@ import "./Pausable.sol";
 import "./HoldPresaleContract.sol";
 import "./OpportyPresale.sol";
 
+contract OpportySaleBonus is Ownable {
+  using SafeMath for uint256;
+
+  uint private startDate;
+
+  /* bonus from time */
+  uint private firstBonusPhase;
+  uint private firstExtraBonus;
+  uint private secondBonusPhase;
+  uint private secondExtraBonus;
+  uint private thirdBonusPhase;
+  uint private thirdExtraBonus;
+  uint private fourBonusPhase;
+  uint private fourExtraBonus;
+
+  /*
+  { amount: 20, startDay: 1,  endDay: 1,  title: '1st 24 hours' },
+  { amount: 15, startDay: 2,  endDay: 4,  title: '2-4 days' },
+  { amount: 12, startDay: 5,  endDay: 9,  title: '5-9 days' },
+  { amount: 10, startDay: 10, endDay: 14, title: '10-14 days' },
+  { amount: 8,  startDay: 15, endDay: 19, title: '15-19 days' },
+  { amount: 5,  startDay: 20, endDay: 24, title: '20-24 days' },
+  { amount: 0,  startDay: 25, endDay: 28, title: '25-28 days' },
+  */
+  function OpportySaleBonus(uint _startDate) {
+    startDate = _startDate;
+
+    firstBonusPhase   = startDate.add(1 days);
+    firstExtraBonus   = 20;
+    secondBonusPhase  = startDate.add(3 days);
+    secondExtraBonus  = 15;
+    thirdBonusPhase   = startDate.add(8 days);
+    thirdExtraBonus   = 10;
+    fourBonusPhase    = startDate.add(14 days);
+    fourExtraBonus    = 5;
+  }
+
+  /**
+ * @dev Calculate bonus for hours
+ * @return token bonus
+ */
+  function calculateBonusForHours(uint256 _tokens) returns(uint256) {
+    if (now >= startDate && now <= firstBonusPhase ) {
+      return _tokens.mul(firstExtraBonus).div(100);
+    }
+    if (now > startDate && now <= secondBonusPhase ) {
+      return _tokens.mul(secondExtraBonus).div(100);
+    }
+    if (now > startDate && now <= thirdBonusPhase ) {
+      return _tokens.mul(thirdExtraBonus).div(100);
+    }
+    if (now > startDate && now <= fourBonusPhase ) {
+      return _tokens.mul(fourExtraBonus).div(100);
+    }
+    return 0;
+  }
+
+  function changeStartDate(uint _date) onlyOwner {
+    startDate = _date;
+    firstBonusPhase   = startDate.add(1 days);
+    secondBonusPhase  = startDate.add(3 days);
+    thirdBonusPhase   = startDate.add(8 days);
+    fourBonusPhase    = startDate.add(14 days);
+  }
+
+  /**
+ * @dev return current bonus percent
+ */
+  function getBonus() public constant returns (uint) {
+    if (now >= startDate && now <= firstBonusPhase ) {
+      return firstExtraBonus;
+    }
+    if (now > startDate && now <= secondBonusPhase ) {
+      return secondExtraBonus;
+    }
+    if (now > startDate && now <= thirdBonusPhase ) {
+      return thirdExtraBonus;
+    }
+    if (now > startDate && now <= fourBonusPhase ) {
+      return fourExtraBonus;
+    }
+    return 0;
+  }
+
+}
+
 contract OpportySale is Pausable {
 
   using SafeMath for uint256;
@@ -37,16 +123,7 @@ contract OpportySale is Pausable {
   // address where funds will be frozen
   HoldPresaleContract public holdContract;
   OpportyPresale private presale;
-
-  /* bonus from time */
-  uint private firstBonusPhase;
-  uint private firstExtraBonus;
-  uint private secondBonusPhase;
-  uint private secondExtraBonus;
-  uint private thirdBonusPhase;
-  uint private thirdExtraBonus;
-  uint private fourBonusPhase;
-  uint private fourExtraBonus;
+  OpportySaleBonus private bonus;
 
   //minimum of tokens that must be on the contract for the start
   uint private minimumTokensToStart = 175000000 * (10 ** 18);
@@ -102,18 +179,10 @@ contract OpportySale is Pausable {
     endDate   = end;
     minimalContribution = 0.3 * 1 ether;
 
-    firstBonusPhase   = startDate.add(1 days);
-    firstExtraBonus   = 20;
-    secondBonusPhase  = startDate.add(3 days);
-    secondExtraBonus  = 15;
-    thirdBonusPhase   = startDate.add(8 days);
-    thirdExtraBonus   = 10;
-    fourBonusPhase    = startDate.add(14 days);
-    fourExtraBonus    = 5;
-
     wallet = walletAddress;
     holdContract = HoldPresaleContract(holdCont);
     presale = OpportyPresale(presaleCont);
+    bonus   = new OpportySaleBonus(start);
   }
 
   /* Setters */
@@ -123,10 +192,7 @@ contract OpportySale is Pausable {
     require(date < endDate);
     uint oldStartDate = startDate;
     startDate = date;
-    firstBonusPhase   = startDate.add(1 days);
-    secondBonusPhase  = startDate.add(3 days);
-    thirdBonusPhase   = startDate.add(8 days);
-    fourBonusPhase    = startDate.add(14 days);
+    bonus.changeStartDate(date);
     ManualChangeStartDate(oldStartDate, date);
   }
   function setEndDate(uint date) onlyOwner {
@@ -223,7 +289,7 @@ contract OpportySale is Pausable {
     FundTransfered(_contributor, contributionAmount);
 
     uint tokenAmount  = contributionAmount.div(price);
-    uint timeBonus    = calculateBonusForHours(tokenAmount);
+    uint timeBonus    = bonus.calculateBonusForHours(tokenAmount);
 
     if (tokenAmount > 0) {
       contributorList[_contributor].tokensIssued += tokenAmount.add(timeBonus);
@@ -272,26 +338,6 @@ contract OpportySale is Pausable {
 
   function checkBalanceContract() internal returns (uint) {
     return token.balanceOf(this);
-  }
-
-  /**
-   * @dev Calculate bonus for hours
-   * @return token bonus
-   */
-  function calculateBonusForHours(uint256 _tokens) internal returns(uint256) {
-    if (now >= startDate && now <= firstBonusPhase ) {
-      return _tokens.mul(firstExtraBonus).div(100);
-    }
-    if (now > startDate && now <= secondBonusPhase ) {
-      return _tokens.mul(secondExtraBonus).div(100);
-    }
-    if (now > startDate && now <= thirdBonusPhase ) {
-      return _tokens.mul(thirdExtraBonus).div(100);
-    }
-    if (now > startDate && now <= fourBonusPhase ) {
-      return _tokens.mul(fourExtraBonus).div(100);
-    }
-    return 0;
   }
 
   /**
@@ -465,18 +511,6 @@ contract OpportySale is Pausable {
     if(now > endDate || state == SaleState.ENDED) {
       return 0;
     }
-    if (now >= startDate && now <= firstBonusPhase ) {
-      return firstExtraBonus;
-    }
-    if (now > startDate && now <= secondBonusPhase ) {
-      return secondExtraBonus;
-    }
-    if (now > startDate && now <= thirdBonusPhase ) {
-      return thirdExtraBonus;
-    }
-    if (now > startDate && now <= fourBonusPhase ) {
-      return fourExtraBonus;
-    }
-    return 0;
+    return bonus.getBonus();
   }
 }
