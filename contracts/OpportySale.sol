@@ -150,7 +150,7 @@ contract OpportySale is Pausable {
   OpportySaleBonus private bonus;
 
   //minimum of tokens that must be on the contract for the start
-  uint private minimumTokensToStart = 175000000 * (10 ** 18);
+  uint private minimumTokensToStart = 150000000 * (10 ** 18);
 
   struct ContributorData {
     bool isActive;
