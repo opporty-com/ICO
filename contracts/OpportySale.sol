@@ -20,6 +20,10 @@ contract OpportySaleBonus is Ownable {
   uint private thirdExtraBonus;
   uint private fourBonusPhase;
   uint private fourExtraBonus;
+  uint private fifthBonusPhase;
+  uint private fifthExtraBonus;
+  uint private sixthBonusPhase;
+  uint private sixthExtraBonus;
 
   /*
   { amount: 20, startDay: 1,  endDay: 1,  title: '1st 24 hours' },
@@ -35,12 +39,16 @@ contract OpportySaleBonus is Ownable {
 
     firstBonusPhase   = startDate.add(1 days);
     firstExtraBonus   = 20;
-    secondBonusPhase  = startDate.add(3 days);
+    secondBonusPhase  = startDate.add(4 days);
     secondExtraBonus  = 15;
-    thirdBonusPhase   = startDate.add(8 days);
-    thirdExtraBonus   = 10;
+    thirdBonusPhase   = startDate.add(9 days);
+    thirdExtraBonus   = 12;
     fourBonusPhase    = startDate.add(14 days);
-    fourExtraBonus    = 5;
+    fourExtraBonus    = 10;
+    fifthBonusPhase   = startDate.add(19 days);
+    fifthExtraBonus   = 8;
+    sixthBonusPhase   = startDate.add(24 days);
+    sixthExtraBonus   = 5;
   }
 
   /**
@@ -50,25 +58,33 @@ contract OpportySaleBonus is Ownable {
   function calculateBonusForHours(uint256 _tokens) returns(uint256) {
     if (now >= startDate && now <= firstBonusPhase ) {
       return _tokens.mul(firstExtraBonus).div(100);
-    }
-    if (now > startDate && now <= secondBonusPhase ) {
+    } else
+    if (now <= secondBonusPhase ) {
       return _tokens.mul(secondExtraBonus).div(100);
-    }
-    if (now > startDate && now <= thirdBonusPhase ) {
+    } else
+    if (now <= thirdBonusPhase ) {
       return _tokens.mul(thirdExtraBonus).div(100);
-    }
-    if (now > startDate && now <= fourBonusPhase ) {
+    } else
+    if (now <= fourBonusPhase ) {
       return _tokens.mul(fourExtraBonus).div(100);
-    }
+    } else
+    if (now <= fifthBonusPhase ) {
+      return _tokens.mul(fifthExtraBonus).div(100);
+    } else
+    if (now <= sixthBonusPhase ) {
+      return _tokens.mul(sixthExtraBonus).div(100);
+    } else
     return 0;
   }
 
   function changeStartDate(uint _date) onlyOwner {
     startDate = _date;
     firstBonusPhase   = startDate.add(1 days);
-    secondBonusPhase  = startDate.add(3 days);
-    thirdBonusPhase   = startDate.add(8 days);
+    secondBonusPhase  = startDate.add(4 days);
+    thirdBonusPhase   = startDate.add(9 days);
     fourBonusPhase    = startDate.add(14 days);
+    fifthBonusPhase   = startDate.add(19 days);
+    sixthBonusPhase   = startDate.add(24 days);
   }
 
   /**
@@ -77,16 +93,22 @@ contract OpportySaleBonus is Ownable {
   function getBonus() public constant returns (uint) {
     if (now >= startDate && now <= firstBonusPhase ) {
       return firstExtraBonus;
-    }
-    if (now > startDate && now <= secondBonusPhase ) {
+    } else
+    if ( now <= secondBonusPhase ) {
       return secondExtraBonus;
-    }
-    if (now > startDate && now <= thirdBonusPhase ) {
+    } else
+    if ( now <= thirdBonusPhase ) {
       return thirdExtraBonus;
-    }
-    if (now > startDate && now <= fourBonusPhase ) {
+    } else
+    if ( now <= fourBonusPhase ) {
       return fourExtraBonus;
-    }
+    } else
+    if ( now <= fifthBonusPhase ) {
+      return fifthExtraBonus;
+    } else
+    if ( now <= sixthBonusPhase ) {
+      return sixthExtraBonus;
+    } else
     return 0;
   }
 
