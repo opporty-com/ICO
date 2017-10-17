@@ -9,7 +9,7 @@ const HoldPresaleContract = artifacts.require("./HoldPresaleContract.sol");
 
 module.exports = function(deployer, network) {
 
-  if(network == "development") {
+  if(network === "development") {
     /* OpportySale */
     let tokenAddress; // type address OpportyToken
     let walletAddress = web3.eth.accounts[web3.eth.accounts.length - 1]; // type address Multisig
@@ -23,6 +23,7 @@ module.exports = function(deployer, network) {
 
     /* HoldPresaleContract */
     let holdContPreSale;
+    let InstancePreSaleHold;
 
     /* OpportyPresale */
     let presaleContAdress;
@@ -39,7 +40,11 @@ module.exports = function(deployer, network) {
         holdCont = OpportyHold.address;
 
         return deployer.deploy(HoldPresaleContract, tokenAddress)
-          .then(() => HoldPresaleContract.deployed());
+          .then(() => HoldPresaleContract.deployed())
+          .then((instance) => {
+            InstancePreSaleHold = instance;
+            return Promise.resolve(true);
+          })
       })
       .then(() => {
         holdContPreSale = HoldPresaleContract.address;
@@ -113,10 +118,17 @@ module.exports = function(deployer, network) {
         console.log(JSON.stringify(OpportyHold.abi));
         console.log('\n\n\n');
 
-        return instanceOppSale.getSaleStatus()
-          .then(status => {
-            console.log('Contract status:', status.toString());
+        return Promise.all([
+          InstancePreSaleHold.addAssetsOwner(presaleContAdress),
+          InstancePreSaleHold.addAssetsOwner(OpportySale.address)
+        ])
+          .then(() => {
+            console.log(`HoldPresaleContract addAssetsOwner [${presaleContAdress}, ${OpportySale.address}]:`);
           })
+      })
+      .catch(e => {
+        console.log('------ ERROR ------');
+        console.error(e);
       });
   } else {
     deployer.deploy(OpportyToken)
