@@ -140,6 +140,8 @@ contract OpportySale is Pausable {
   // minimum ETH investment amount
   uint private minimalContribution;
 
+  bool releasedTokens;
+
   // address where funds are collected
   address public wallet;
   // address where funds will be frozen
@@ -200,6 +202,7 @@ contract OpportySale is Pausable {
     startDate = start;
     endDate   = end;
     minimalContribution = 0.3 * 1 ether;
+    releasedTokens = false;
 
     wallet = walletAddress;
     holdContract = HoldPresaleContract(holdCont);
@@ -345,11 +348,19 @@ contract OpportySale is Pausable {
     uint cbalance = checkBalanceContract();
 
     require (cbalance != 0);
+    require (withdrawedTokens >= totalTokens);
 
     if (getEthRaised() >= SOFTCAP) {
-      if (token.transfer(holdContract, cbalance ) ) {
-        holdContract.addHolder(msg.sender, cbalance, 1, endDate.add(182 days) );
-        TokensTransferedToHold(holdContract , cbalance );
+      if (releasedTokens == true) {
+        if (token.transfer(msg.sender, cbalance ) ) {
+          TokensTransferedToOwner(msg.sender , cbalance );
+        }
+      } else {
+        if (token.transfer(holdContract, cbalance ) ) {
+          holdContract.addHolder(msg.sender, cbalance, 1, endDate.add(182 days) );
+          releasedTokens = true;
+          TokensTransferedToHold(holdContract , cbalance );
+        }
       }
     } else {
       if (token.transfer(msg.sender, cbalance) ) {
