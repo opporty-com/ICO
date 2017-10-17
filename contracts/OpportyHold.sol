@@ -12,6 +12,8 @@ contract OpportyHold  {
   uint public firstThawDate;
   bool public firstUnlocked;
 
+  event TokensTransfered(address contributor , uint amount);
+
   function OpportyHold(
     address _OppToken,
     address _postFreezeDestination,
@@ -41,6 +43,7 @@ contract OpportyHold  {
     uint totalBalance = OpportyToken(OppToken).balanceOf(this);
 
     OpportyToken(OppToken).transfer(msg.sender, totalBalance);
+    TokensTransfered(msg.sender, totalBalance);
   }
 
   function changeDestinationAddress(address _newAddress) external {
