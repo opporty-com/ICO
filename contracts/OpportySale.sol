@@ -34,7 +34,6 @@ contract OpportySaleBonus is Ownable {
    * 8%  '15-19 days'
    * 5%  '20-24 days'
    * 0%  '25-28 days'
-   * @return token bonus
    */
   function OpportySaleBonus(uint _startDate) {
     startDate = _startDate;
