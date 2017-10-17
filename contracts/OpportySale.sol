@@ -25,36 +25,42 @@ contract OpportySaleBonus is Ownable {
   uint private sixthBonusPhase;
   uint private sixthExtraBonus;
 
-  /*
-  { amount: 20, startDay: 1,  endDay: 1,  title: '1st 24 hours' },
-  { amount: 15, startDay: 2,  endDay: 4,  title: '2-4 days' },
-  { amount: 12, startDay: 5,  endDay: 9,  title: '5-9 days' },
-  { amount: 10, startDay: 10, endDay: 14, title: '10-14 days' },
-  { amount: 8,  startDay: 15, endDay: 19, title: '15-19 days' },
-  { amount: 5,  startDay: 20, endDay: 24, title: '20-24 days' },
-  { amount: 0,  startDay: 25, endDay: 28, title: '25-28 days' },
-  */
+  /**
+   * @dev constructor
+   * 20% '1st 24 hours'
+   * 15% '2-4 days'
+   * 12% '5-9 days'
+   * 10% '10-14 days'
+   * 8%  '15-19 days'
+   * 5%  '20-24 days'
+   * 0%  '25-28 days'
+   */
   function OpportySaleBonus(uint _startDate) {
     startDate = _startDate;
 
     firstBonusPhase   = startDate.add(1 days);
     firstExtraBonus   = 20;
+
     secondBonusPhase  = startDate.add(4 days);
     secondExtraBonus  = 15;
+
     thirdBonusPhase   = startDate.add(9 days);
     thirdExtraBonus   = 12;
+
     fourBonusPhase    = startDate.add(14 days);
     fourExtraBonus    = 10;
+
     fifthBonusPhase   = startDate.add(19 days);
     fifthExtraBonus   = 8;
+
     sixthBonusPhase   = startDate.add(24 days);
     sixthExtraBonus   = 5;
   }
 
   /**
- * @dev Calculate bonus for hours
- * @return token bonus
- */
+   * @dev Calculate bonus for hours
+   * @return token bonus
+   */
   function calculateBonusForHours(uint256 _tokens) returns(uint256) {
     if (now >= startDate && now <= firstBonusPhase ) {
       return _tokens.mul(firstExtraBonus).div(100);
@@ -88,8 +94,8 @@ contract OpportySaleBonus is Ownable {
   }
 
   /**
- * @dev return current bonus percent
- */
+   * @dev return current bonus percent
+   */
   function getBonus() public constant returns (uint) {
     if (now >= startDate && now <= firstBonusPhase ) {
       return firstExtraBonus;
@@ -150,7 +156,7 @@ contract OpportySale is Pausable {
   OpportySaleBonus private bonus;
 
   //minimum of tokens that must be on the contract for the start
-  uint private minimumTokensToStart = 175000000 * (10 ** 18);
+  uint private minimumTokensToStart = 150000000 * (10 ** 18);
 
   struct ContributorData {
     bool isActive;
