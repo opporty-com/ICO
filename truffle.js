@@ -4,7 +4,7 @@ module.exports = {
       host: process.env.HOST || "localhost",
       port: 8545,
       network_id: "*", // Match any network id
-      gas: 4712388, // Gas limit used for deploys
+      gas: 5000000, // Gas limit used for deploys
     },
     rinkeby: {
       host: process.env.HOST || "localhost",

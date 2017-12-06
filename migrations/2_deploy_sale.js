@@ -76,7 +76,7 @@ module.exports = function(deployer, network) {
         return deployer.deploy(OpportySale, tokenAddress, walletAddress, start, end, holdContPreSale, presaleContAddress2)
           .then(() => OpportySale.deployed())
           .catch(e => {
-            console.log(`/n/n/n`);
+            console.log(`\n\n\n OpportySale \n\n\n`);
             console.log(e);
           });
 
