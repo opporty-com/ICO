@@ -1,4 +1,4 @@
-pragma solidity ^0.4.15;
+pragma solidity ^0.4.18;
 
 import "./OpportyToken.sol";
 
@@ -18,7 +18,7 @@ contract OpportyHold  {
     address _OppToken,
     address _postFreezeDestination,
     uint firstDate
-  ) {
+  ) public {
     OppToken = _OppToken;
     postFreezeDestination = _postFreezeDestination;
 
@@ -27,7 +27,7 @@ contract OpportyHold  {
     firstUnlocked = false;
   }
 
-  function getBalance() constant returns (uint)
+  function getBalance() public constant returns (uint)
   {
       return OpportyToken(OppToken).balanceOf(this);
   }

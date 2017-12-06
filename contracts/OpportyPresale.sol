@@ -1,4 +1,4 @@
-pragma solidity ^0.4.15;
+pragma solidity ^0.4.18;
 
 import "./OpportyToken.sol";
 import "./Pausable.sol";
@@ -57,7 +57,7 @@ contract OpportyPresale is Pausable {
     address walletAddress,
     uint end,
     uint endSale,
-    address holdCont )
+    address holdCont ) public
   {
     token = OpportyToken(tokenAddress);
     state = SaleState.NEW;
@@ -138,7 +138,7 @@ contract OpportyPresale is Pausable {
     FundTransfered(msg.sender, msg.value);
   }
 
-  function getBalanceContract() internal returns (uint) {
+  function getBalanceContract() view internal returns (uint) {
     return token.balanceOf(this);
   }
 
@@ -161,7 +161,7 @@ contract OpportyPresale is Pausable {
     token.transfer(msg.sender, balance);
   }
 
-  function withdrawEth() {
+  function withdrawEth() public {
     require(this.balance != 0);
     require(state == SaleState.ENDED);
     require(msg.sender == wallet);
@@ -187,7 +187,7 @@ contract OpportyPresale is Pausable {
     ManualChangeEndDate(oldEndDate, date);
   }
 
-  function getTokenBalance() constant returns (uint) {
+  function getTokenBalance() public constant returns (uint) {
     return token.balanceOf(this);
   }
 

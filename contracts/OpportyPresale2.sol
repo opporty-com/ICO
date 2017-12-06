@@ -73,7 +73,7 @@ contract OpportyPresale2 is Pausable {
     uint end,
     uint endSale,
     address holdCont,
-    address oldPreSale )
+    address oldPreSale) public
   {
     token = OpportyToken(tokenAddress);
     state = SaleState.NEW;
@@ -168,7 +168,7 @@ contract OpportyPresale2 is Pausable {
   }
 
 
-  function getBalanceContract() internal returns (uint) {
+  function getBalanceContract() view internal returns (uint) {
     return token.balanceOf(this);
   }
 
@@ -191,7 +191,7 @@ contract OpportyPresale2 is Pausable {
     token.transfer(msg.sender, balance);
   }
 
-  function withdrawEth() {
+  function withdrawEth() public {
     require(this.balance != 0);
     require(state == SaleState.ENDED);
     require(msg.sender == wallet);
@@ -223,7 +223,7 @@ contract OpportyPresale2 is Pausable {
     ChangeMinAmount(oldMinAmount, minimalContribution);
   }
 
-  function getTokenBalance() constant returns (uint) {
+  function getTokenBalance() public constant returns (uint) {
     return token.balanceOf(this);
   }
 

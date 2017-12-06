@@ -1,5 +1,6 @@
 const moment        = require('moment');
 const abi           = require('ethereumjs-abi');
+const Promise       = require('bluebird');
 
 const OpportyToken  = artifacts.require("./OpportyToken.sol");
 const OpportyHold   = artifacts.require("./OpportyHold.sol");
@@ -73,7 +74,11 @@ module.exports = function(deployer, network) {
         presaleContAddress2 = OpportyPresale2.address;
 
         return deployer.deploy(OpportySale, tokenAddress, walletAddress, start, end, holdContPreSale, presaleContAddress2)
-          .then(() => OpportySale.deployed());
+          .then(() => OpportySale.deployed())
+          .catch(e => {
+            console.log(`/n/n/n`);
+            console.log(e);
+          });
 
       })
       .then(() => {

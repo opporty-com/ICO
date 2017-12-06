@@ -1,4 +1,4 @@
-pragma solidity ^0.4.15;
+pragma solidity ^0.4.18;
 
 import "./StandardToken.sol";
 
@@ -19,7 +19,7 @@ contract OpportyToken is StandardToken {
   /**
    * @dev Contructor that gives msg.sender all of existing tokens.
    */
-  function OpportyToken() {
+  function OpportyToken() public {
     totalSupply = INITIAL_SUPPLY;
     balances[msg.sender] = INITIAL_SUPPLY;
   }

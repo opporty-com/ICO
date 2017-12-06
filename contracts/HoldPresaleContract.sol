@@ -1,4 +1,4 @@
-pragma solidity ^0.4.15;
+pragma solidity ^0.4.18;
 
 import "./OpportyToken.sol";
 import "./Ownable.sol";
@@ -35,7 +35,7 @@ contract HoldPresaleContract is Ownable {
   }
 
   /* constructor */
-  function HoldPresaleContract(address _OppToken) {
+  function HoldPresaleContract(address _OppToken) public {
     OppToken = OpportyToken(_OppToken);
   }
 
@@ -60,7 +60,7 @@ contract HoldPresaleContract is Ownable {
     Hold(msg.sender, holder, tokens, timed);
   }
 
-  function getBalance() constant returns (uint) {
+  function getBalance() public constant returns (uint) {
     return OppToken.balanceOf(this);
   }
 

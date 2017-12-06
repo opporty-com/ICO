@@ -35,7 +35,7 @@ contract OpportySaleBonus is Ownable {
   * 5%  '20-24 days'
   * 0%  '25-28 days'
   */
-  function OpportySaleBonus(uint _startDate) {
+  function OpportySaleBonus(uint _startDate) public {
     startDate = _startDate;
 
     firstBonusPhase   = startDate.add(1 days);
@@ -56,7 +56,7 @@ contract OpportySaleBonus is Ownable {
  * @dev Calculate bonus for hours
  * @return token bonus
  */
-  function calculateBonusForHours(uint256 _tokens) returns(uint256) {
+  function calculateBonusForHours(uint256 _tokens) public view returns(uint256) {
     if (now >= startDate && now <= firstBonusPhase ) {
       return _tokens.mul(firstExtraBonus).div(100);
     } else
@@ -78,7 +78,7 @@ contract OpportySaleBonus is Ownable {
     return 0;
   }
 
-  function changeStartDate(uint _date) onlyOwner {
+  function changeStartDate(uint _date) public onlyOwner {
     startDate = _date;
     firstBonusPhase   = startDate.add(1 days);
     secondBonusPhase  = startDate.add(4 days);
@@ -195,7 +195,7 @@ contract OpportySale is Pausable {
     uint start,
     uint end,
     address holdCont,
-    address presaleCont)
+    address presaleCont) public
   {
     token = OpportyToken(tokenAddress);
     state = SaleState.NEW;
@@ -215,7 +215,7 @@ contract OpportySale is Pausable {
 
   /* Setters */
 
-  function setStartDate(uint date) onlyOwner {
+  function setStartDate(uint date) public onlyOwner {
     require(state == SaleState.NEW);
     require(date < endDate);
     uint oldStartDate = startDate;
@@ -223,27 +223,27 @@ contract OpportySale is Pausable {
     bonus.changeStartDate(date);
     ManualChangeStartDate(oldStartDate, date);
   }
-  function setEndDate(uint date) onlyOwner {
+  function setEndDate(uint date) public onlyOwner {
     require(state == SaleState.NEW || state == SaleState.SALE);
     require(date > now && date > startDate);
     uint oldEndDate = endDate;
     endDate = date;
     ManualChangeEndDate(oldEndDate, date);
   }
-  function setSoftCap(uint softCap) onlyOwner {
+  function setSoftCap(uint softCap) public onlyOwner {
     require(state == SaleState.NEW);
     SOFTCAP = softCap;
   }
-  function setHardCap(uint hardCap) onlyOwner {
+  function setHardCap(uint hardCap) public onlyOwner {
     require(state == SaleState.NEW);
     HARDCAP = hardCap;
   }
-  function setMinimalContribution(uint minimumAmount) onlyOwner {
+  function setMinimalContribution(uint minimumAmount) public onlyOwner {
     uint oldMinAmount = minimalContribution;
     minimalContribution = minimumAmount;
     ChangeMinAmount(oldMinAmount, minimalContribution);
   }
-  function setPreSale(address preSaleAddress) onlyOwner {
+  function setPreSale(address preSaleAddress) public onlyOwner {
     require(preSaleAddress != 0x0);
     presale = OpportyPresale2(preSaleAddress);
     ChangePreSale(preSaleAddress);
@@ -355,7 +355,7 @@ contract OpportySale is Pausable {
   /**
    * @dev transfer remains tokens after the completion of crowdsale
    */
-  function releaseTokens() onlyOwner {
+  function releaseTokens() public onlyOwner {
     require (state == SaleState.ENDED);
 
     uint cbalance = checkBalanceContract();
@@ -382,14 +382,14 @@ contract OpportySale is Pausable {
     }
   }
 
-  function checkBalanceContract() internal returns (uint) {
+  function checkBalanceContract() internal view returns (uint) {
     return token.balanceOf(this);
   }
 
   /**
    * @dev if crowdsale is successful, investors can claim token here
    */
-  function getTokens() whenNotPaused {
+  function getTokens() public whenNotPaused {
     uint er =  getEthRaised();
     require((now > endDate && er >= SOFTCAP )  || ( er >= HARDCAP)  );
     require(state == SaleState.ENDED);
@@ -405,7 +405,7 @@ contract OpportySale is Pausable {
     }
 
   }
-  function batchReturnTokens(uint _numberOfReturns) onlyOwner whenNotPaused {
+  function batchReturnTokens(uint _numberOfReturns) public onlyOwner whenNotPaused {
     uint er = getEthRaised();
     require((now > endDate && er >= SOFTCAP )  || (er >= HARDCAP)  );
     require(state == SaleState.ENDED);
@@ -433,7 +433,7 @@ contract OpportySale is Pausable {
   /**
    * @dev if crowdsale is unsuccessful, investors can claim refunds here
    */
-  function refund() whenNotPaused {
+  function refund() public whenNotPaused {
     require(now > endDate && getEthRaised() < SOFTCAP);
     require(contributorList[msg.sender].contributionAmount > 0);
     require(!hasClaimedEthWhenFail[msg.sender]);
@@ -446,7 +446,7 @@ contract OpportySale is Pausable {
       Refunded(msg.sender, ethContributed);
     }
   }
-  function batchReturnEthIfFailed(uint _numberOfReturns) onlyOwner whenNotPaused {
+  function batchReturnEthIfFailed(uint _numberOfReturns) public onlyOwner whenNotPaused {
     require(now > endDate && getEthRaised() < SOFTCAP);
     address currentParticipantAddress;
     uint contribution;
@@ -470,7 +470,7 @@ contract OpportySale is Pausable {
   /**
    * @dev transfer funds ETH to multisig wallet if reached minimum goal
    */
-  function withdrawEth() {
+  function withdrawEth() public {
     require(this.balance != 0);
     require(getEthRaised() >= SOFTCAP);
     require(msg.sender == wallet);
@@ -479,7 +479,7 @@ contract OpportySale is Pausable {
     WithdrawedEthToWallet(bal);
   }
 
-  function withdrawRemainingBalanceForManualRecovery() onlyOwner {
+  function withdrawRemainingBalanceForManualRecovery() public onlyOwner {
     require(this.balance != 0);
     require(now > endDate);
     require(contributorIndexes[nextContributorToClaim] == 0x0);
@@ -489,7 +489,7 @@ contract OpportySale is Pausable {
   /**
    * @dev Manual start crowdsale.
    */
-  function startCrowdsale() onlyOwner  {
+  function startCrowdsale() public onlyOwner  {
     require(now > startDate && now <= endDate);
     require(state == SaleState.NEW);
     require(checkBalanceContract() >= minimumTokensToStart);
@@ -500,44 +500,44 @@ contract OpportySale is Pausable {
 
   /* Getters */
 
-  function getAccountsNumber() constant returns (uint) {
+  function getAccountsNumber() public constant returns (uint) {
     return nextContributorIndex;
   }
 
-  function getEthRaised() constant returns (uint) {
+  function getEthRaised() public constant returns (uint) {
     uint pre = presale.getEthRaised();
     return pre + ethRaised;
   }
 
-  function getTokensTotal() constant returns (uint) {
+  function getTokensTotal() public constant returns (uint) {
     return totalTokens;
   }
 
-  function getWithdrawedToken() constant returns (uint) {
+  function getWithdrawedToken() public constant returns (uint) {
     return withdrawedTokens;
   }
 
-  function calculateMaxContribution() constant returns (uint) {
+  function calculateMaxContribution() public constant returns (uint) {
     return HARDCAP - getEthRaised();
   }
 
-  function getSoftCap() constant returns(uint) {
+  function getSoftCap() public constant returns(uint) {
     return SOFTCAP;
   }
 
-  function getHardCap() constant returns(uint) {
+  function getHardCap() public constant returns(uint) {
     return HARDCAP;
   }
 
-  function getSaleStatus() constant returns (uint) {
+  function getSaleStatus() public constant returns (uint) {
     return uint(state);
   }
 
-  function getStartDate() constant returns (uint) {
+  function getStartDate() public constant returns (uint) {
     return startDate;
   }
 
-  function getEndDate() constant returns (uint) {
+  function getEndDate() public constant returns (uint) {
     return endDate;
   }
 
@@ -546,7 +546,7 @@ contract OpportySale is Pausable {
     return now > endDate || state == SaleState.ENDED;
   }
 
-  function getTokenBalance() constant returns (uint) {
+  function getTokenBalance() public constant returns (uint) {
     return token.balanceOf(this);
   }
 
