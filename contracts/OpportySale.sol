@@ -1,10 +1,10 @@
-pragma solidity ^0.4.15;
+pragma solidity ^0.4.18;
 
 import "./SafeMath.sol";
 import "./OpportyToken.sol";
 import "./Pausable.sol";
 import "./HoldPresaleContract.sol";
-import "./OpportyPresale.sol";
+import "./OpportyPresale2.sol";
 
 contract OpportySaleBonus is Ownable {
   using SafeMath for uint256;
@@ -139,7 +139,7 @@ contract OpportySale is Pausable {
   // how many tokens sent to investors
   uint private withdrawedTokens;
   // minimum ETH investment amount
-  uint private minimalContribution;
+  uint minimalContribution;
 
   bool releasedTokens;
 
@@ -147,7 +147,7 @@ contract OpportySale is Pausable {
   address public wallet;
   // address where funds will be frozen
   HoldPresaleContract public holdContract;
-  OpportyPresale private presale;
+  OpportyPresale2 private presale;
   OpportySaleBonus private bonus;
 
   //minimum of tokens that must be on the contract for the start
@@ -186,6 +186,8 @@ contract OpportySale is Pausable {
   event ManualChangeEndDate(uint beforeDate, uint afterDate);
   event TokensTransferedToHold(address hold, uint amount);
   event TokensTransferedToOwner(address hold, uint amount);
+  event ChangeMinAmount(uint oldMinAmount, uint minAmount);
+  event ChangePreSale(address preSale);
 
   function OpportySale(
     address tokenAddress,
@@ -193,7 +195,7 @@ contract OpportySale is Pausable {
     uint start,
     uint end,
     address holdCont,
-    address presaleCont )
+    address presaleCont)
   {
     token = OpportyToken(tokenAddress);
     state = SaleState.NEW;
@@ -207,7 +209,7 @@ contract OpportySale is Pausable {
 
     wallet = walletAddress;
     holdContract = HoldPresaleContract(holdCont);
-    presale = OpportyPresale(presaleCont);
+    presale = OpportyPresale2(presaleCont);
     bonus   = new OpportySaleBonus(start);
   }
 
@@ -235,6 +237,16 @@ contract OpportySale is Pausable {
   function setHardCap(uint hardCap) onlyOwner {
     require(state == SaleState.NEW);
     HARDCAP = hardCap;
+  }
+  function setMinimalContribution(uint minimumAmount) onlyOwner {
+    uint oldMinAmount = minimalContribution;
+    minimalContribution = minimumAmount;
+    ChangeMinAmount(oldMinAmount, minimalContribution);
+  }
+  function setPreSale(address preSaleAddress) onlyOwner {
+    require(preSaleAddress != 0x0);
+    presale = OpportyPresale2(preSaleAddress);
+    ChangePreSale(preSaleAddress);
   }
 
   /* The function without name is the default function that is called whenever anyone sends funds to a contract */

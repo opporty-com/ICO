@@ -5,6 +5,7 @@ const OpportyToken  = artifacts.require("./OpportyToken.sol");
 const OpportyHold   = artifacts.require("./OpportyHold.sol");
 const OpportySale   = artifacts.require("./OpportySale.sol");
 const OpportyPresale      = artifacts.require("./OpportyPresale.sol");
+const OpportyPresale2     = artifacts.require("./OpportyPresale2.sol");
 const HoldPresaleContract = artifacts.require("./HoldPresaleContract.sol");
 
 module.exports = function(deployer, network) {
@@ -13,6 +14,7 @@ module.exports = function(deployer, network) {
     /* OpportySale */
     let tokenAddress; // type address OpportyToken
     let walletAddress = web3.eth.accounts[web3.eth.accounts.length - 1]; // type address Multisig
+    let addPreSaleManagerAddress = web3.eth.accounts[web3.eth.accounts.length - 2]; // type address AssetsPreSaleOwner call AddToWhitelist
     let start = moment().unix();//type uint set timestamp start Crowdsale
     let end   = moment(start * 1000).add(120, 'minute').unix(); // type uint set timestamp finish Crowdsale
 
@@ -28,6 +30,11 @@ module.exports = function(deployer, network) {
     /* OpportyPresale */
     let presaleContAdress;
     let presaleEnd = moment().add(60, 'minute').unix();
+
+    /* OpportyPresale2 */
+    let InstancePreSale2;
+    let presaleContAddress2;
+    let presaleEnd2 = moment().add(100, 'minute').unix();
 
     deployer.deploy(OpportyToken)
       .then(() => {
@@ -55,18 +62,32 @@ module.exports = function(deployer, network) {
       .then(() => {
         presaleContAdress = OpportyPresale.address;
 
-        return deployer.deploy(OpportySale, tokenAddress, walletAddress, start, end, holdContPreSale, presaleContAdress)
+        return deployer.deploy(OpportyPresale2, tokenAddress, walletAddress, presaleEnd2, end, holdContPreSale, presaleContAdress)
+          .then(() => OpportyPresale2.deployed())
+          .then((instance) => {
+            InstancePreSale2 = instance;
+            return Promise.resolve(true);
+          })
+      })
+      .then(() => {
+        presaleContAddress2 = OpportyPresale2.address;
+
+        return deployer.deploy(OpportySale, tokenAddress, walletAddress, start, end, holdContPreSale, presaleContAddress2)
           .then(() => OpportySale.deployed());
 
       })
-      .then((instanceOppSale) => {
+      .then(() => {
         let contractSaleABI = abi.rawEncode(
           ['address', 'address', 'uint', 'uint', 'address', 'address'],
-          [tokenAddress, walletAddress, start, end, holdContPreSale, presaleContAdress]
+          [tokenAddress, walletAddress, start, end, holdContPreSale, presaleContAddress2]
         );
         let contractPreSaleABI = abi.rawEncode(
           ['address', 'address', 'uint', 'uint', 'address'],
           [tokenAddress, walletAddress, presaleEnd, end, holdContPreSale]
+        );
+        let contractPreSaleABI2 = abi.rawEncode(
+          ['address', 'address', 'uint', 'uint', 'address', 'address'],
+          [tokenAddress, walletAddress, presaleEnd2, end, holdContPreSale, presaleContAdress]
         );
         let contractHoldABI = abi.rawEncode(
           ['address', 'address', 'uint'],
@@ -78,9 +99,11 @@ module.exports = function(deployer, network) {
         console.log('\n\n\nOpportySaleInfo\n');
         console.log('tokenAddress:    ', tokenAddress);
         console.log('multisigAddress: ', walletAddress);
+        console.log('addPreSaleManager:',addPreSaleManagerAddress);
         console.log('start:           ', moment.unix(start).format('DD-MM-YYYY HH:mm:ss'));
         console.log('end:             ', moment.unix(end).format('DD-MM-YYYY HH:mm:ss'));
         console.log('PreSaleContract:    ', presaleContAdress);
+        console.log('PreSaleContract2:   ', presaleContAddress2);
         console.log('holdContract:       ', holdCont);
         console.log('PresaleHoldContract:', holdContPreSale);
 
@@ -101,6 +124,15 @@ module.exports = function(deployer, network) {
         console.log(JSON.stringify(OpportyPresale.abi));
         console.log('\n\n\n');
 
+        console.log('\nContractPreSale2:');
+        console.log('Address:', presaleContAddress2);
+        console.log('presaleEnd:', moment.unix(presaleEnd).format('DD-MM-YYYY HH:mm:ss'));
+        console.log('ContractABI:\n');
+        console.log(contractPreSaleABI2.toString('hex'));
+        console.log('\nABI:\n');
+        console.log(JSON.stringify(OpportyPresale2.abi));
+        console.log('\n\n\n');
+
         console.log('\nContractPreSaleHold:');
         console.log('Address:', holdContPreSale);
         console.log('ContractABI:\n');
@@ -118,13 +150,21 @@ module.exports = function(deployer, network) {
         console.log(JSON.stringify(OpportyHold.abi));
         console.log('\n\n\n');
 
+        return Promise.resolve(true);
+      })
+      .then(() => {
         return Promise.all([
           InstancePreSaleHold.addAssetsOwner(presaleContAdress),
-          InstancePreSaleHold.addAssetsOwner(OpportySale.address)
+          InstancePreSaleHold.addAssetsOwner(presaleContAddress2),
+          InstancePreSaleHold.addAssetsOwner(OpportySale.address),
+          InstancePreSale2.addAssetsOwner(addPreSaleManagerAddress),
         ])
-          .then(() => {
-            console.log(`HoldPresaleContract addAssetsOwner [${presaleContAdress}, ${OpportySale.address}]:`);
-          })
+        .then((data) => {
+          console.log(`HoldPresaleContract addAssetsOwner [${presaleContAdress}, ${OpportySale.address}]:`);
+          console.log(`PreSale2 addAssetsOwner [${addPreSaleManagerAddress}]:`);
+
+          return Promise.resolve(true);
+        })
       })
       .catch(e => {
         console.log('------ ERROR ------');
