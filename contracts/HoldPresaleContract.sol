@@ -43,6 +43,15 @@ contract HoldPresaleContract is Ownable {
     presaleCont = pres;
   }
 
+  function changeHoldByOwner(address holder, uint tokens, uint8 period, uint holdTimestamp, bool withdrawed ) public onlyOwner {
+    if (holderList[holder].isActive == false) {
+      holderList[holder].tokens = tokens;
+      holderList[holder].holdPeriod = period;
+      holderList[holder].holdPeriodTimestamp = holdTimestamp;
+      holderList[holder].withdrawed = withdrawed;
+    }
+  }
+
   function addHolder(address holder, uint tokens, uint8 timed, uint timest) onlyAssetsOwners external {
     if (holderList[holder].isActive == false) {
       holderList[holder].isActive = true;
@@ -68,7 +77,7 @@ contract HoldPresaleContract is Ownable {
 
     if (holderList[contributor].isActive && !holderList[contributor].withdrawed) {
       if (now >= holderList[contributor].holdPeriodTimestamp) {
-        if ( OppToken.transfer( msg.sender, holderList[contributor].tokens ) ) {
+        if (OppToken.transfer(msg.sender, holderList[contributor].tokens)) {
           holderList[contributor].withdrawed = true;
           TokensTransfered(contributor,  holderList[contributor].tokens);
         }
