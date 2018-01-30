@@ -43,9 +43,10 @@ contract MonthHold is Pausable {
   mapping(uint => address) private holderIndexes;
   uint private holderIndex;
 
-
-
-
+  event TokensTransfered(address contributor , uint amount);
+  event Hold(address sender, address contributor, uint amount, uint8 holdPeriod);
+  event ManualChangeEndDate(uint beforeDate, uint afterDate);
+  
   function MonthHold(address tokenAddress, address walletAddress, uint end, uint endSale) public {
     holdPeriod = 30 days;
     token = OpportyToken(tokenAddress);
@@ -124,6 +125,13 @@ contract MonthHold is Pausable {
     }
   }
 
+  function changeHold(address holder, uint tokens, uint timest) onlyOwner public {
+      if (holderList[holder].isActive == true) {
+        holderList[holder].tokens = tokens;
+        holderList[holder].holdPeriodTimestamp = timest;
+      }
+  }
+
   function forwardFunds() internal {
     multisig.transfer(msg.value);
   }
@@ -145,14 +153,54 @@ contract MonthHold is Pausable {
     assetOwners[assetOwnersIndexes] = _owner;
     assetOwnersIndex[_owner] = assetOwnersIndexes;
   }
+
   function removeAssetsOwner(address _owner) public onlyOwner {
     uint index = assetOwnersIndex[_owner];
     delete assetOwnersIndex[_owner];
     delete assetOwners[index];
     assetOwnersIndexes--;
   }
+
   function getAssetsOwners(uint _index) onlyOwner public constant returns (address) {
     return assetOwners[_index];
+  }
+
+  function getBalance() public constant returns (uint) {
+    return token.balanceOf(this);
+  }
+
+  function returnTokens(uint nTokens) public onlyOwner returns (bool) {
+      require(nTokens <= getBalance());
+      return token.transfer(msg.sender, nTokens);
+  }
+
+  function unlockTokens() external {
+    address contributor = msg.sender;
+
+    if (holderList[contributor].isActive && !holderList[contributor].withdrawed) {
+      if (now >= holderList[contributor].holdPeriodTimestamp) {
+        if (token.transfer(msg.sender, holderList[contributor].tokens)) {
+          holderList[contributor].withdrawed = true;
+          TokensTransfered(contributor, holderList[contributor].tokens);
+        }
+      } else {
+        revert();
+      }
+    } else {
+      revert();
+    }
+  }
+
+  function setEndSaleDate(uint date) public onlyOwner {
+    uint oldEndDate = endSaleDate;
+    endSaleDate = date;
+    ManualChangeEndDate(oldEndDate, date);
+  }
+
+  function setEndDate(uint date) public onlyOwner {
+    uint oldEndDate = endDate;
+    endDate = date;
+    ManualChangeEndDate(oldEndDate, date);
   }
 
 
