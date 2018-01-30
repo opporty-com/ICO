@@ -2,7 +2,7 @@ pragma solidity ^0.4.18;
 
 import "./OpportyToken.sol";
 
-contract OpportyHold  {
+contract OpportyHold {
   // Addresses and contracts
   address public OppToken;
   address public postFreezeDestination;
@@ -11,6 +11,14 @@ contract OpportyHold  {
   uint public firstAllocation;
   uint public firstThawDate;
   bool public firstUnlocked;
+
+  struct Holder {
+    uint tokens;
+    uint holdPeriodTimestamp;
+    bool withdrawed;
+  }
+
+  mapping (address => Holder) public holderList;
 
   event TokensTransfered(address contributor , uint amount);
 
@@ -27,13 +35,11 @@ contract OpportyHold  {
     firstUnlocked = false;
   }
 
-  function getBalance() public constant returns (uint)
-  {
-      return OpportyToken(OppToken).balanceOf(this);
+  function getBalance() public constant returns (uint) {
+    return OpportyToken(OppToken).balanceOf(this);
   }
 
-  function unlockFirst() external
-  {
+  function unlockFirst() external {
     require (!firstUnlocked);
     require (msg.sender == postFreezeDestination);
     require (now >= firstThawDate);
