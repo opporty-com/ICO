@@ -51,6 +51,14 @@ contract OpportyPresale is Pausable {
   mapping(uint => address) private whitelistIndexes;
   uint private whitelistIndex;
 
+  struct Bonus {
+    uint8 minHold;
+    uint minAmount;
+    uint8 bonus;
+  }
+
+  Bonus[] bonuses;
+
   /* constructor */
   function OpportyPresale(
     address tokenAddress,
@@ -62,12 +70,59 @@ contract OpportyPresale is Pausable {
     token = OpportyToken(tokenAddress);
     state = SaleState.NEW;
 
-    endDate     = end;
+    endDate = end;
     endSaleDate = endSale;
-    price       = 0.0002 * 1 ether;
-    wallet      = walletAddress;
+    price = 0.0002 * 1 ether;
+    wallet = walletAddress;
 
+    bonuses.push(Bonus({minHold: 1, minAmount: 0, bonus: 25 }));
+    bonuses.push(Bonus({minHold: 1, minAmount: 50, bonus: 30 }));
+    bonuses.push(Bonus({minHold: 1, minAmount: 100, bonus: 35 }));
+    bonuses.push(Bonus({minHold: 1, minAmount: 250, bonus: 40 }));
+    bonuses.push(Bonus({minHold: 1, minAmount: 500, bonus: 45 }));
+    bonuses.push(Bonus({minHold: 1, minAmount: 1000, bonus: 55 }));
+    bonuses.push(Bonus({minHold: 1, minAmount: 5000, bonus: 70 }));
+
+    bonuses.push(Bonus({minHold: 12, minAmount: 0, bonus: 35 }));
+    bonuses.push(Bonus({minHold: 12, minAmount: 50, bonus: 40 }));
+    bonuses.push(Bonus({minHold: 12, minAmount: 100, bonus: 45 }));
+    bonuses.push(Bonus({minHold: 12, minAmount: 250, bonus: 50 }));
+    bonuses.push(Bonus({minHold: 12, minAmount: 500, bonus: 70 }));
+    bonuses.push(Bonus({minHold: 12, minAmount: 1000, bonus: 80 }));
+    bonuses.push(Bonus({minHold: 12, minAmount: 5000, bonus: 90 }));
+    
     holdContract = HoldPresaleContract(holdCont);
+  }
+
+  function changeBonus(uint8 minHold, uint minAmount, uint8 newBonus) public {
+    bool find = false;
+    for (uint i = 0; i < bonuses.length; ++i) {
+      if (bonuses[i].minHold == minHold && bonuses[i].minAmount == minAmount) {
+        bonuses[i].bonus = newBonus;
+        find = true;
+        break;
+      }
+    }
+    if (!find) {
+      bonuses.push(Bonus({minHold:minHold, minAmount:minAmount, bonus:newBonus}));
+    }
+  }
+
+  function getBonus(uint8 hol, uint am) public view returns(uint8) {
+    uint max = 0;
+    uint8 bon = 0;
+    for (uint i = 0; i < bonuses.length; ++i) {
+      if (hol >= bonuses[i].minHold) 
+        max = bonuses[i].minHold;
+    }
+    for (i = 0; i < bonuses.length; ++i) {
+      if (bonuses[i].minHold == max) {
+        if (am >= bonuses[i].minAmount) 
+          bon = bonuses[i].bonus;
+      }
+    }
+
+    return bon;
   }
 
   function startPresale() public onlyOwner {
@@ -82,27 +137,26 @@ contract OpportyPresale is Pausable {
     SaleEnded(block.number);
   }
 
-  function addToWhitelist(address inv, uint amount, uint8 holdPeriod, uint8 bonus) public onlyOwner {
+  function addToWhitelist(address inv, uint amount, uint8 holdPeriod) public onlyOwner {
     require(state == SaleState.NEW || state == SaleState.SALE);
-    require(holdPeriod == 1 || holdPeriod == 3 || holdPeriod == 6 || holdPeriod == 12);
+    //require(holdPeriod == 1 || holdPeriod == 3 || holdPeriod == 6 || holdPeriod == 12);
 
     amount = amount * (10 ** 18);
 
     if (whiteList[inv].isActive == false) {
       whiteList[inv].isActive = true;
-      whiteList[inv].payed    = false;
+      whiteList[inv].payed = false;
       whitelistIndexes[whitelistIndex] = inv;
       whitelistIndex++;
     }
 
-    whiteList[inv].invAmount  = amount;
+    uint8 bonus = getBonus(holdPeriod, amount);
+
+    whiteList[inv].invAmount = amount;
     whiteList[inv].holdPeriod = holdPeriod;
     whiteList[inv].bonus = bonus;
-
-    if (whiteList[inv].holdPeriod==1)  whiteList[inv].holdTimestamp = endSaleDate.add(30 days); else
-    if (whiteList[inv].holdPeriod==3)  whiteList[inv].holdTimestamp = endSaleDate.add(92 days); else
-    if (whiteList[inv].holdPeriod==6)  whiteList[inv].holdTimestamp = endSaleDate.add(182 days); else
-    if (whiteList[inv].holdPeriod==12) whiteList[inv].holdTimestamp = endSaleDate.add(1 years);
+    whiteList[inv].holdTimestamp = endSaleDate.add(whiteList[inv].holdPeriod * 30 days + (whiteList[inv].holdPeriod / 2) * 1 days );
+    
 
     AddedToWhiteList(inv, whiteList[inv].invAmount, whiteList[inv].holdPeriod,  whiteList[inv].bonus);
   }

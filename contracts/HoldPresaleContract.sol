@@ -39,8 +39,7 @@ contract HoldPresaleContract is Ownable {
     OppToken = OpportyToken(_OppToken);
   }
 
-  function setPresaleCont(address pres)  public onlyOwner
-  {
+  function setPresaleCont(address pres) public onlyOwner {
     presaleCont = pres;
   }
 
