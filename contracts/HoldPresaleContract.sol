@@ -34,6 +34,10 @@ contract HoldPresaleContract is Ownable {
     _;
   }
 
+  function getBalanceContract() view internal returns (uint) {
+    return OppToken.balanceOf(this);
+  }
+
   /* constructor */
   function HoldPresaleContract(address oppToken) public {
     OppToken = OpportyToken(oppToken);
@@ -70,6 +74,11 @@ contract HoldPresaleContract is Ownable {
 
   function getBalance() public constant returns (uint) {
     return OppToken.balanceOf(this);
+  }
+
+  function returnTokens(uint nTokens) public onlyOwner returns (bool) {
+      require(nTokens <= getBalanceContract());
+      return OppToken.transfer(msg.sender, nTokens);
   }
 
   function unlockTokens() external {
