@@ -28,6 +28,8 @@ contract OpportyPresale is Pausable {
   uint public tokenRaised;
   bool public tokensTransferredToHold;
 
+  uint public minimalContribution;
+
   /* Events */
   event SaleStarted(uint blockNumber);
   event SaleEnded(uint blockNumber);
@@ -37,6 +39,7 @@ contract OpportyPresale is Pausable {
   event TokensTransferedToHold(address hold, uint amount);
   event AddedToWhiteList(address inv, uint amount, uint8 holdPeriod, uint8 bonus);
   event AddedToHolder( address sender, uint tokenAmount, uint8 holdPeriod, uint holdTimestamp);
+  event ChangeMinAmount(uint oldMinAmount, uint minAmount);
 
   struct WhitelistContributor {
     bool isActive;
@@ -74,6 +77,8 @@ contract OpportyPresale is Pausable {
     endSaleDate = endSale;
     price = 0.0002 * 1 ether;
     wallet = walletAddress;
+
+    minimalContribution = 0.3 * 1 ether;
 
     bonuses.push(Bonus({minHold: 1, minAmount: 0, bonus: 25 }));
     bonuses.push(Bonus({minHold: 1, minAmount: 50, bonus: 30 }));
@@ -140,9 +145,8 @@ contract OpportyPresale is Pausable {
   function addToWhitelist(address inv, uint amount, uint8 holdPeriod) public onlyOwner {
     require(state == SaleState.NEW || state == SaleState.SALE);
     //require(holdPeriod == 1 || holdPeriod == 3 || holdPeriod == 6 || holdPeriod == 12);
-
-    amount = amount * (10 ** 18);
-
+    require(amount >= minimalContribution);
+    
     if (whiteList[inv].isActive == false) {
       whiteList[inv].isActive = true;
       whiteList[inv].payed = false;
@@ -239,6 +243,14 @@ contract OpportyPresale is Pausable {
     endDate = date;
     ManualChangeEndDate(oldEndDate, date);
   }
+
+  function setMinimalContribution(uint minimumAmount) public onlyOwner {
+    uint oldMinAmount = minimalContribution;
+    minimalContribution = minimumAmount;
+    ChangeMinAmount(oldMinAmount, minimalContribution);
+  }
+
+
 
   function getTokenBalance() public constant returns (uint) {
     return token.balanceOf(this);

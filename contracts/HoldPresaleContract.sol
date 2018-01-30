@@ -10,15 +10,14 @@ contract HoldPresaleContract is Ownable {
   address private presaleCont;
 
   struct Holder {
-    bool isActive;
     uint tokens;
     uint8 holdPeriod;
     uint holdPeriodTimestamp;
     bool withdrawed;
   }
 
-  mapping(address => Holder) public holderList;
-  mapping(uint => address) private holderIndexes;
+  mapping (address => Holder[]) public holderList;
+  mapping (uint => address) private holderIndexes;
 
   mapping (uint => address) private assetOwners;
   mapping (address => uint) private assetOwnersIndex;
@@ -47,28 +46,20 @@ contract HoldPresaleContract is Ownable {
     presaleCont = pres;
   }
 
-  function changeHoldByOwner(address holder, uint tokens, uint8 period, uint holdTimestamp, bool withdrawed ) public onlyOwner {
-    if (holderList[holder].isActive == true) {
-      holderList[holder].tokens = tokens;
-      holderList[holder].holdPeriod = period;
-      holderList[holder].holdPeriodTimestamp = holdTimestamp;
-      holderList[holder].withdrawed = withdrawed;
+  function changeHoldByOwner(address holder, uint index, bool ins, uint tokens, uint8 period, uint holdTimestamp, bool withdrawed ) public onlyOwner {
+    if (ins) {
+      holderList[holder].push(Holder({tokens: tokens, holdPeriod: period, holdPeriodTimestamp: holdTimestamp, withdrawed: false }));  
+    } else {
+      holderList[holder][index].tokens = tokens;
+      holderList[holder][index].holdPeriod = period;
+      holderList[holder][index].holdPeriodTimestamp = holdTimestamp;
+      holderList[holder][index].withdrawed = withdrawed;
     }
+    
   }
 
   function addHolder(address holder, uint tokens, uint8 timed, uint timest) onlyAssetsOwners external {
-    if (holderList[holder].isActive == false) {
-      holderList[holder].isActive = true;
-      holderList[holder].tokens = tokens;
-      holderList[holder].holdPeriod = timed;
-      holderList[holder].holdPeriodTimestamp = timest;
-      holderIndexes[holderIndex] = holder;
-      holderIndex++;
-    } else {
-      holderList[holder].tokens += tokens;
-      holderList[holder].holdPeriod = timed;
-      holderList[holder].holdPeriodTimestamp = timest;
-    }
+    holderList[holder].push(Holder({tokens: tokens, holdPeriod: timed, holdPeriodTimestamp: timest, withdrawed: false }));  
     Hold(msg.sender, holder, tokens, timed);
   }
 
@@ -84,17 +75,15 @@ contract HoldPresaleContract is Ownable {
   function unlockTokens() external {
     address contributor = msg.sender;
 
-    if (holderList[contributor].isActive && !holderList[contributor].withdrawed) {
-      if (now >= holderList[contributor].holdPeriodTimestamp) {
-        if (OppToken.transfer(msg.sender, holderList[contributor].tokens)) {
-          holderList[contributor].withdrawed = true;
-          TokensTransfered(contributor,  holderList[contributor].tokens);
-        }
-      } else {
-        revert();
-      }
-    } else {
-      revert();
+    for (uint i = 0; i < holderList[contributor].length; ++i) {
+      if (!holderList[contributor][i].withdrawed) {
+        if (now >= holderList[contributor][i].holdPeriodTimestamp) {
+          if (OppToken.transfer(msg.sender, holderList[contributor][i].tokens)) {
+            holderList[contributor][i].withdrawed = true;
+            TokensTransfered(contributor, holderList[contributor][i].tokens);
+          }
+        } 
+      } 
     }
   }
 
