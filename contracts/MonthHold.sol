@@ -40,13 +40,11 @@ contract MonthHold is Pausable {
   }
 
   mapping(address => Holder) public holderList;
-  mapping(uint => address) private holderIndexes;
-  uint private holderIndex;
 
   event TokensTransfered(address contributor , uint amount);
   event Hold(address sender, address contributor, uint amount, uint8 holdPeriod);
   event ManualChangeEndDate(uint beforeDate, uint afterDate);
-  
+
   function MonthHold(address tokenAddress, address walletAddress, uint end, uint endSale) public {
     holdPeriod = 30 days;
     token = OpportyToken(tokenAddress);
@@ -117,8 +115,6 @@ contract MonthHold is Pausable {
         holderList[holder].isActive = true;
         holderList[holder].tokens = tokens;
         holderList[holder].holdPeriodTimestamp = timest;
-        holderIndexes[holderIndex] = holder;
-        holderIndex++;
     } else {
         holderList[holder].tokens += tokens;
         holderList[holder].holdPeriodTimestamp = timest;
