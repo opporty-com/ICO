@@ -149,7 +149,7 @@ contract OpportyPresale is Pausable {
       whitelistIndexes[whitelistIndex] = inv;
       whitelistIndex++;
     }
-
+    
     uint8 bonus = getBonus(holdPeriod, amount);
 
     whiteList[inv].invAmount = amount;
@@ -157,7 +157,6 @@ contract OpportyPresale is Pausable {
     whiteList[inv].bonus = bonus;
     whiteList[inv].holdTimestamp = endSaleDate.add(whiteList[inv].holdPeriod * 30 days + (whiteList[inv].holdPeriod / 2) * 1 days );
     
-
     AddedToWhiteList(inv, whiteList[inv].invAmount, whiteList[inv].holdPeriod,  whiteList[inv].bonus);
   }
 
@@ -175,13 +174,13 @@ contract OpportyPresale is Pausable {
     WhitelistContributor memory contrib = whiteList[msg.sender];
     require(contrib.invAmount <= msg.value || contrib.payed);
 
-    if(whiteList[msg.sender].payed == false) {
+    if (whiteList[msg.sender].payed == false) {
       whiteList[msg.sender].payed = true;
     }
 
     ethRaised += msg.value;
 
-    uint tokenAmount  = msg.value.div(price);
+    uint tokenAmount = msg.value.div(price);
     tokenAmount += tokenAmount.mul(contrib.bonus).div(100);
     tokenAmount *= 10 ** 18;
 

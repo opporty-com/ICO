@@ -35,8 +35,8 @@ contract HoldPresaleContract is Ownable {
   }
 
   /* constructor */
-  function HoldPresaleContract(address _OppToken) public {
-    OppToken = OpportyToken(_OppToken);
+  function HoldPresaleContract(address oppToken) public {
+    OppToken = OpportyToken(oppToken);
   }
 
   function setPresaleCont(address pres) public onlyOwner {
@@ -44,7 +44,7 @@ contract HoldPresaleContract is Ownable {
   }
 
   function changeHoldByOwner(address holder, uint tokens, uint8 period, uint holdTimestamp, bool withdrawed ) public onlyOwner {
-    if (holderList[holder].isActive == false) {
+    if (holderList[holder].isActive == true) {
       holderList[holder].tokens = tokens;
       holderList[holder].holdPeriod = period;
       holderList[holder].holdPeriodTimestamp = holdTimestamp;
