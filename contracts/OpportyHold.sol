@@ -12,15 +12,8 @@ contract OpportyHold {
   uint public firstThawDate;
   bool public firstUnlocked;
 
-  struct Holder {
-    uint tokens;
-    uint holdPeriodTimestamp;
-    bool withdrawed;
-  }
-
-  mapping (address => Holder) public holderList;
-
   event TokensTransfered(address contributor , uint amount);
+  event ManualChangeEndDate(uint beforeDate, uint afterDate);
 
   function OpportyHold(
     address _OppToken,
