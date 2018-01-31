@@ -5,7 +5,7 @@ import "./Pausable.sol";
 
 contract MonthHold is Pausable {
   using SafeMath for uint256;
-  OpportyToken public token;  
+  OpportyToken public token;
 
   uint public holdPeriod;
   address public multisig;
@@ -26,10 +26,11 @@ contract MonthHold is Pausable {
 
   struct Bonus {
     uint minAmount;
+    uint maxAmount;
     uint8 bonus;
   }
 
-  Bonus[] bonuses;
+  Bonus[]  bonuses;
 
   struct Holder {
     bool isActive;
@@ -46,6 +47,11 @@ contract MonthHold is Pausable {
   event ManualChangeEndDate(uint beforeDate, uint afterDate);
   event ChangeMinAmount(uint oldMinAmount, uint minAmount);
 
+  modifier onlyAssetsOwners() {
+    require(assetOwnersIndex[msg.sender] > 0 || msg.sender == owner);
+    _;
+  }
+
   function MonthHold(address tokenAddress, address walletAddress, uint end, uint endSale) public {
     holdPeriod = 30 days;
     token = OpportyToken(tokenAddress);
@@ -57,26 +63,26 @@ contract MonthHold is Pausable {
     multisig = walletAddress;
     minimalContribution = 0.3 * 1 ether;
 
-    bonuses.push(Bonus({minAmount: 0, bonus: 25 }));
-    bonuses.push(Bonus({minAmount: 50, bonus: 30 }));
-    bonuses.push(Bonus({minAmount: 100, bonus: 35 }));
-    bonuses.push(Bonus({minAmount: 250, bonus: 40 }));
-    bonuses.push(Bonus({minAmount: 500, bonus: 45 }));
-    bonuses.push(Bonus({minAmount: 1000, bonus: 55 }));
-    bonuses.push(Bonus({minAmount: 5000, bonus: 70 }));
+    bonuses.push(Bonus({minAmount: 0, maxAmount: 50, bonus: 25 }));
+    bonuses.push(Bonus({minAmount: 50, maxAmount: 100, bonus: 30 }));
+    bonuses.push(Bonus({minAmount: 100, maxAmount: 250, bonus: 35 }));
+    bonuses.push(Bonus({minAmount: 250, maxAmount: 500, bonus: 40 }));
+    bonuses.push(Bonus({minAmount: 500, maxAmount: 1000, bonus: 45 }));
+    bonuses.push(Bonus({minAmount: 1000, maxAmount: 5000, bonus: 55 }));
+    bonuses.push(Bonus({minAmount: 5000, maxAmount: 99999999, bonus: 70 }));
   }
 
-  function changeBonus(uint minAmount, uint8 newBonus) public {
+  function changeBonus(uint minAmount, uint maxAmount, uint8 newBonus) public {
     bool find = false;
     for (uint i = 0; i < bonuses.length; ++i) {
-      if (bonuses[i].minAmount == minAmount) {
+      if (bonuses[i].minAmount == minAmount && bonuses[i].maxAmount == maxAmount ) {
         bonuses[i].bonus = newBonus;
         find = true;
         break;
       }
     }
     if (!find) {
-      bonuses.push(Bonus({minAmount:minAmount, bonus:newBonus}));
+      bonuses.push(Bonus({minAmount:minAmount, maxAmount: maxAmount, bonus:newBonus}));
     }
   }
 
@@ -85,7 +91,7 @@ contract MonthHold is Pausable {
     am /= 10 ** 18;
     
     for (uint i = 0; i < bonuses.length; ++i) {
-        if (am >= bonuses[i].minAmount) 
+        if (am >= bonuses[i].minAmount && am<bonuses[i].maxAmount) 
           bon = bonuses[i].bonus;
     }
 
@@ -122,7 +128,7 @@ contract MonthHold is Pausable {
     }
   }
 
-  function changeHold(address holder, uint tokens, uint timest) onlyOwner public {
+  function changeHold(address holder, uint tokens, uint timest) onlyAssetsOwners public {
       if (holderList[holder].isActive == true) {
         holderList[holder].tokens = tokens;
         holderList[holder].holdPeriodTimestamp = timest;
@@ -171,21 +177,14 @@ contract MonthHold is Pausable {
       return token.transfer(msg.sender, nTokens);
   }
 
-  function unlockTokens() external {
-    address contributor = msg.sender;
+  function unlockTokens() public returns (bool) {
+    require(holderList[msg.sender].isActive);
+    require(!holderList[msg.sender].withdrawed);
+    require(now >= holderList[msg.sender].holdPeriodTimestamp);
 
-    if (holderList[contributor].isActive && !holderList[contributor].withdrawed) {
-      if (now >= holderList[contributor].holdPeriodTimestamp) {
-        if (token.transfer(msg.sender, holderList[contributor].tokens)) {
-          holderList[contributor].withdrawed = true;
-          TokensTransfered(contributor, holderList[contributor].tokens);
-        }
-      } else {
-        revert();
-      }
-    } else {
-      revert();
-    }
+    token.transfer(msg.sender, holderList[msg.sender].tokens); 
+    holderList[msg.sender].withdrawed = true;
+    TokensTransfered(msg.sender, holderList[msg.sender].tokens);
   }
 
   function setEndSaleDate(uint date) public onlyOwner {
@@ -199,13 +198,15 @@ contract MonthHold is Pausable {
     endDate = date;
     ManualChangeEndDate(oldEndDate, date);
   }
+  
+  function setPrice(uint newPrice) public onlyOwner {
+    price = newPrice;
+  }
 
   function setMinimalContribution(uint minimumAmount) public onlyOwner {
     uint oldMinAmount = minimalContribution;
     minimalContribution = minimumAmount;
     ChangeMinAmount(oldMinAmount, minimalContribution);
   }
-
-
-
+  
 }
