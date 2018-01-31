@@ -185,6 +185,7 @@ contract MonthHold is Pausable {
     token.transfer(msg.sender, holderList[msg.sender].tokens); 
     holderList[msg.sender].withdrawed = true;
     TokensTransfered(msg.sender, holderList[msg.sender].tokens);
+    return true;
   }
 
   function setEndSaleDate(uint date) public onlyOwner {
