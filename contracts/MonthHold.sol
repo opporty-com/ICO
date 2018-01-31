@@ -44,6 +44,7 @@ contract MonthHold is Pausable {
   event TokensTransfered(address contributor , uint amount);
   event Hold(address sender, address contributor, uint amount, uint8 holdPeriod);
   event ManualChangeEndDate(uint beforeDate, uint afterDate);
+  event ChangeMinAmount(uint oldMinAmount, uint minAmount);
 
   function MonthHold(address tokenAddress, address walletAddress, uint end, uint endSale) public {
     holdPeriod = 30 days;
@@ -197,6 +198,12 @@ contract MonthHold is Pausable {
     uint oldEndDate = endDate;
     endDate = date;
     ManualChangeEndDate(oldEndDate, date);
+  }
+
+  function setMinimalContribution(uint minimumAmount) public onlyOwner {
+    uint oldMinAmount = minimalContribution;
+    minimalContribution = minimumAmount;
+    ChangeMinAmount(oldMinAmount, minimalContribution);
   }
 
 
