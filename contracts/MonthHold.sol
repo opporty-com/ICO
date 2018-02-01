@@ -35,7 +35,6 @@ contract MonthHold is Pausable {
   struct Holder {
     bool isActive;
     uint tokens;
-    uint8 holdPeriod;
     uint holdPeriodTimestamp;
     bool withdrawed;
   }
@@ -46,6 +45,14 @@ contract MonthHold is Pausable {
   event Hold(address sender, address contributor, uint amount, uint8 holdPeriod);
   event ManualChangeEndDate(uint beforeDate, uint afterDate);
   event ChangeMinAmount(uint oldMinAmount, uint minAmount);
+  event BonusChanged(uint minAmount, uint maxAmount, uint8 newBonus);
+  event HolderAdded(address addr, uint tokens, uint holdPeriodTimestamp);
+  event FundsTransferredToMultisig(address multisig, uint value);
+  event SaleNew();
+  event SaleStarted();
+  event SaleEnded();
+  event ManualPriceChange(uint beforePrice, uint afterPrice);
+  event HoldChanged(address holder, uint tokens, uint timest);
 
   modifier onlyAssetsOwners() {
     require(assetOwnersIndex[msg.sender] > 0 || msg.sender == owner);
@@ -84,6 +91,7 @@ contract MonthHold is Pausable {
     if (!find) {
       bonuses.push(Bonus({minAmount:minAmount, maxAmount: maxAmount, bonus:newBonus}));
     }
+    BonusChanged(minAmount, maxAmount, newBonus);
   }
 
   function getBonus(uint am) public view returns(uint8) {
@@ -114,7 +122,10 @@ contract MonthHold is Pausable {
 
     uint holdTimestamp = endSaleDate.add(holdPeriod);
     addHolder(msg.sender, tokenAmount, holdTimestamp);
+    HolderAdded(msg.sender, tokenAmount, holdTimestamp);
+    
     forwardFunds();
+    
   }
 
   function addHolder(address holder, uint tokens, uint timest) internal {
@@ -132,23 +143,28 @@ contract MonthHold is Pausable {
       if (holderList[holder].isActive == true) {
         holderList[holder].tokens = tokens;
         holderList[holder].holdPeriodTimestamp = timest;
+        HoldChanged(holder, tokens, timest);
       }
   }
 
   function forwardFunds() internal {
     multisig.transfer(msg.value);
+    FundsTransferredToMultisig(multisig, msg.value);
   }
 
   function newPresale() public onlyOwner {
     state = SaleState.NEW;
+    SaleNew();
   }
 
   function startPresale() public onlyOwner {
     state = SaleState.SALE;
+    SaleStarted();
   }
 
   function endPresale() public onlyOwner {
     state = SaleState.ENDED;
+    SaleEnded();
   }
 
   function addAssetsOwner(address _owner) public onlyOwner {
@@ -173,8 +189,10 @@ contract MonthHold is Pausable {
   }
 
   function returnTokens(uint nTokens) public onlyOwner returns (bool) {
-      require(nTokens <= getBalance());
-      return token.transfer(msg.sender, nTokens);
+    require(nTokens <= getBalance());
+    token.transfer(msg.sender, nTokens);
+    TokensTransfered(msg.sender, nTokens);
+    return true;
   }
 
   function unlockTokens() public returns (bool) {
@@ -201,7 +219,9 @@ contract MonthHold is Pausable {
   }
   
   function setPrice(uint newPrice) public onlyOwner {
+    uint oldPrice = price;
     price = newPrice;
+    ManualPriceChange(oldPrice, newPrice);
   }
 
   function setMinimalContribution(uint minimumAmount) public onlyOwner {
