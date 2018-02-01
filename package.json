@@ -6,16 +6,16 @@
     "test": "test"
   },
   "devDependencies": {
-    "web3": "^1.0.0-beta.26",
+    "web3": "^1.0.0-beta.29",
     "solc": "^0.4.19",
     "ethereumjs-testrpc": "^6.0.3",
-    "truffle": "^4.0.1"
+    "truffle": "^4.0.6"
   },
   "author": "Opporty",
   "dependencies": {
     "chai": "^4.1.2",
     "global": "^4.3.2",
-    "moment": "^2.19.3",
-    "ethereumjs-abi": "^0.6.4"
+    "moment": "^2.20.1",
+    "ethereumjs-abi": "^0.6.5"
   }
 }

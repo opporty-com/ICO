@@ -26,6 +26,18 @@ cd bin
 ./migration-dev.sh
 ```
 
+Start mining private net
+```bash
+cd bin
+./miner-start.sh
+```
+
+Stop mining private net
+```bash
+cd bin
+./miner-stop.sh
+```
+
 Start rinkeby net
 ```bash
 cd bin
@@ -41,8 +53,14 @@ cd bin
 ```
 
 Connection Ethereum Wallet to private net:
-
 > Linux
 ```bash
 ethereumwallet --rpc http://localhost:8545
 ```
+
+Show sync stats:
+```bash
+cd bin
+./sync_stats.sh
+```
+

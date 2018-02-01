@@ -3,17 +3,25 @@
 set -e
 
 declare VERBOSITY=${LOG_LEVEL:=1};
+declare DELETE_OLD_BLOCKCHAIN=${DELETE_OLD_BLOCKCHAIN:=1};
+declare START_MINING=${MINING:=0};
+declare GETH_OPTS;
 
-echo 'rm /root/.ethereum/devnet/geth'
-rm -rf /root/.ethereum/devnet/geth
+if [[ DELETE_OLD_BLOCKCHAIN == 1 ]]; then
+  echo 'rm /root/.ethereum/devnet/geth'
+  rm -rf /root/.ethereum/devnet/geth
+fi
 
-#echo 'cp devnet/keystore/'
-#cp -r /root/devnet/keystore/* /root/.ethereum/devnet/keystore/
+if [[ START_MINING == 1 ]]; then
+  GETH_OPTS='--mine --minerthreads 1';
+  echo 'Start mining'
+fi
 
 echo 'geth init genesis.json'
 geth \
   --datadir "/root/.ethereum/devnet" \
   --verbosity ${VERBOSITY} \
+  --ipcpath "/root/geth_ipc/geth.ipc" \
   init "/root/devnet/genesis.json"
 
 sleep 3
@@ -26,14 +34,11 @@ geth \
   --verbosity ${VERBOSITY} \
   --datadir "/root/.ethereum/devnet" \
   --keystore "/root/devnet/keystore" \
-  --rpcaddr 0.0.0.0 \
+  --ipcpath "/root/geth_ipc/geth.ipc" \
   --maxpeers 0 \
-  --rpcapi "db,eth,net,web3,personal" \
-  --rpc \
+  --rpc --rpcaddr 0.0.0.0 --rpcapi "db,eth,net,web3,personal" --rpccorsdomain "*" \
   --jspath "/root/devnet/" \
   --preload "preload.js" \
   --password "/root/devnet/password" \
-  --unlock 0 \
-  --ipcdisable \
-  --mine \
-  --minerthreads 1
+  --unlock 0 ${GETH_OPTS} $@
+#  --ws --wsaddr 0.0.0.0 --wsapi "db,eth,net,web3,personal" --wsorigins "*" \
