@@ -40,6 +40,9 @@ contract MonthHold is Pausable {
   }
 
   mapping(address => Holder) public holderList;
+  mapping(uint => address) private holderIndexes;
+  uint private holderIndex;
+
 
   event TokensTransfered(address contributor , uint amount);
   event Hold(address sender, address contributor, uint amount, uint8 holdPeriod);
@@ -133,6 +136,8 @@ contract MonthHold is Pausable {
         holderList[holder].isActive = true;
         holderList[holder].tokens = tokens;
         holderList[holder].holdPeriodTimestamp = timest;
+        holderIndexes[holderIndex] = holder;
+        holderIndex++;
     } else {
         holderList[holder].tokens += tokens;
         holderList[holder].holdPeriodTimestamp = timest;
@@ -228,6 +233,13 @@ contract MonthHold is Pausable {
     uint oldMinAmount = minimalContribution;
     minimalContribution = minimumAmount;
     ChangeMinAmount(oldMinAmount, minimalContribution);
+  }
+
+  function batchChangeHoldPeriod(uint holdedPeriod) public onlyAssetsOwners {
+    for (uint i = 0; i < holderIndex; ++i) {
+        holderList[holderIndexes[i]].holdPeriodTimestamp = holdedPeriod;
+        HoldChanged(holderIndexes[i], holderList[holderIndexes[i]].tokens, holdedPeriod);
+    }
   }
   
 }

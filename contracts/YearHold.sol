@@ -35,24 +35,34 @@ contract YearHold is Pausable {
   struct Holder {
     bool isActive;
     uint tokens;
-    uint8 holdPeriod;
     uint holdPeriodTimestamp;
     bool withdrawed;
   }
 
   mapping(address => Holder) public holderList;
+  mapping(uint => address) private holderIndexes;
+  uint private holderIndex;
+
 
   event TokensTransfered(address contributor , uint amount);
   event Hold(address sender, address contributor, uint amount, uint8 holdPeriod);
   event ManualChangeEndDate(uint beforeDate, uint afterDate);
   event ChangeMinAmount(uint oldMinAmount, uint minAmount);
+  event BonusChanged(uint minAmount, uint maxAmount, uint8 newBonus);
+  event HolderAdded(address addr, uint tokens, uint holdPeriodTimestamp);
+  event FundsTransferredToMultisig(address multisig, uint value);
+  event SaleNew();
+  event SaleStarted();
+  event SaleEnded();
+  event ManualPriceChange(uint beforePrice, uint afterPrice);
+  event HoldChanged(address holder, uint tokens, uint timest);
 
   modifier onlyAssetsOwners() {
     require(assetOwnersIndex[msg.sender] > 0 || msg.sender == owner);
     _;
   }
 
-  function MonthHold(address tokenAddress, address walletAddress, uint end, uint endSale) public {
+  function YearHold(address tokenAddress, address walletAddress, uint end, uint endSale) public {
     holdPeriod = 1 years;
     token = OpportyToken(tokenAddress);
     state = SaleState.NEW;
@@ -84,6 +94,7 @@ contract YearHold is Pausable {
     if (!find) {
       bonuses.push(Bonus({minAmount:minAmount, maxAmount: maxAmount, bonus:newBonus}));
     }
+    BonusChanged(minAmount, maxAmount, newBonus);
   }
 
   function getBonus(uint am) public view returns(uint8) {
@@ -114,7 +125,10 @@ contract YearHold is Pausable {
 
     uint holdTimestamp = endSaleDate.add(holdPeriod);
     addHolder(msg.sender, tokenAmount, holdTimestamp);
+    HolderAdded(msg.sender, tokenAmount, holdTimestamp);
+    
     forwardFunds();
+    
   }
 
   function addHolder(address holder, uint tokens, uint timest) internal {
@@ -122,6 +136,8 @@ contract YearHold is Pausable {
         holderList[holder].isActive = true;
         holderList[holder].tokens = tokens;
         holderList[holder].holdPeriodTimestamp = timest;
+        holderIndexes[holderIndex] = holder;
+        holderIndex++;
     } else {
         holderList[holder].tokens += tokens;
         holderList[holder].holdPeriodTimestamp = timest;
@@ -132,23 +148,28 @@ contract YearHold is Pausable {
       if (holderList[holder].isActive == true) {
         holderList[holder].tokens = tokens;
         holderList[holder].holdPeriodTimestamp = timest;
+        HoldChanged(holder, tokens, timest);
       }
   }
 
   function forwardFunds() internal {
     multisig.transfer(msg.value);
+    FundsTransferredToMultisig(multisig, msg.value);
   }
 
   function newPresale() public onlyOwner {
     state = SaleState.NEW;
+    SaleNew();
   }
 
   function startPresale() public onlyOwner {
     state = SaleState.SALE;
+    SaleStarted();
   }
 
   function endPresale() public onlyOwner {
     state = SaleState.ENDED;
+    SaleEnded();
   }
 
   function addAssetsOwner(address _owner) public onlyOwner {
@@ -173,8 +194,10 @@ contract YearHold is Pausable {
   }
 
   function returnTokens(uint nTokens) public onlyOwner returns (bool) {
-      require(nTokens <= getBalance());
-      return token.transfer(msg.sender, nTokens);
+    require(nTokens <= getBalance());
+    token.transfer(msg.sender, nTokens);
+    TokensTransfered(msg.sender, nTokens);
+    return true;
   }
 
   function unlockTokens() public returns (bool) {
@@ -201,13 +224,22 @@ contract YearHold is Pausable {
   }
   
   function setPrice(uint newPrice) public onlyOwner {
+    uint oldPrice = price;
     price = newPrice;
+    ManualPriceChange(oldPrice, newPrice);
   }
 
   function setMinimalContribution(uint minimumAmount) public onlyOwner {
     uint oldMinAmount = minimalContribution;
     minimalContribution = minimumAmount;
     ChangeMinAmount(oldMinAmount, minimalContribution);
+  }
+
+  function batchChangeHoldPeriod(uint holdedPeriod) public onlyAssetsOwners {
+    for (uint i = 0; i < holderIndex; ++i) {
+        holderList[holderIndexes[i]].holdPeriodTimestamp = holdedPeriod;
+        HoldChanged(holderIndexes[i], holderList[holderIndexes[i]].tokens, holdedPeriod);
+    }
   }
   
 }
