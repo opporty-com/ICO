@@ -22,6 +22,7 @@ contract OpportyToken is StandardToken {
   function OpportyToken() public {
     totalSupply = INITIAL_SUPPLY;
     balances[msg.sender] = INITIAL_SUPPLY;
+    Transfer(0x0, msg.sender, INITIAL_SUPPLY);
   }
 
 }
