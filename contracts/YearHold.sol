@@ -63,9 +63,8 @@ contract YearHold is Pausable {
     _;
   }
 
-  function YearHold(address tokenAddress, address walletAddress, uint end, uint endSale) public {
+  function YearHold(address walletAddress, uint end, uint endSale) public {
     holdPeriod = 1 years;
-    token = OpportyToken(tokenAddress);
     state = SaleState.NEW;
 
     endDate = end;
