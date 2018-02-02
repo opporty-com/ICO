@@ -49,13 +49,14 @@ contract YearHold is Pausable {
   event ManualChangeEndDate(uint beforeDate, uint afterDate);
   event ChangeMinAmount(uint oldMinAmount, uint minAmount);
   event BonusChanged(uint minAmount, uint maxAmount, uint8 newBonus);
-  event HolderAdded(address addr, uint tokens, uint holdPeriodTimestamp);
+  event HolderAdded(address addr, uint contribution, uint tokens, uint holdPeriodTimestamp);
   event FundsTransferredToMultisig(address multisig, uint value);
   event SaleNew();
   event SaleStarted();
   event SaleEnded();
   event ManualPriceChange(uint beforePrice, uint afterPrice);
   event HoldChanged(address holder, uint tokens, uint timest);
+  event TokenChanged(address newAddress);
 
   modifier onlyAssetsOwners() {
     require(assetOwnersIndex[msg.sender] > 0 || msg.sender == owner);
@@ -125,7 +126,7 @@ contract YearHold is Pausable {
 
     uint holdTimestamp = endSaleDate.add(holdPeriod);
     addHolder(msg.sender, tokenAmount, holdTimestamp);
-    HolderAdded(msg.sender, tokenAmount, holdTimestamp);
+    HolderAdded(msg.sender, msg.value, tokenAmount, holdTimestamp);
     
     forwardFunds();
     
@@ -240,6 +241,21 @@ contract YearHold is Pausable {
         holderList[holderIndexes[i]].holdPeriodTimestamp = holdedPeriod;
         HoldChanged(holderIndexes[i], holderList[holderIndexes[i]].tokens, holdedPeriod);
     }
+  }
+
+  function setToken(address newToken) public onlyOwner {
+    token = OpportyToken(newToken);
+    TokenChanged(token);
+  }
+
+  function getTokenAmount() public view returns (uint) {
+    uint tokens = 0;
+    for (uint i = 0; i < holderIndex; ++i) {
+        if (!holderList[holderIndexes[i]].withdrawed) {
+          tokens += holderList[holderIndexes[i]].tokens;
+        }
+    }
+    return tokens;
   }
   
 }

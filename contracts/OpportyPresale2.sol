@@ -42,7 +42,10 @@ contract OpportyPresale2 is Pausable {
   event TokensTransferedToHold(address hold, uint amount);
   event AddedToWhiteList(address inv, uint amount, uint8 holdPeriod, uint8 bonus);
   event AddedToHolder(address sender, uint tokenAmount, uint8 holdPeriod, uint holdTimestamp);
+  event ManualPriceChange(uint beforePrice, uint afterPrice);
   event ChangeMinAmount(uint oldMinAmount, uint minAmount);
+
+  event TokenChanged(address newAddress);
 
   struct WhitelistContributor {
     bool isActive;
@@ -68,60 +71,60 @@ contract OpportyPresale2 is Pausable {
 
   /* constructor */
   function OpportyPresale2(
-    address tokenAddress,
     address walletAddress,
     uint end,
     uint endSale,
-    address holdCont,
-    address oldPreSale) public
+    address holdCont) public
   {
-    token = OpportyToken(tokenAddress);
     state = SaleState.NEW;
-
-    endDate     = end;
+    endDate = end;
     endSaleDate = endSale;
-    price       = 0.0002 * 1 ether;
-    wallet      = walletAddress;
+    price = 0.0002 * 1 ether;
+    wallet = walletAddress;
     minimalContribution = 0.3 * 1 ether;
 
-    preSaleContract = OpportyPresale(oldPreSale);
+    //preSaleContract = OpportyPresale(oldPreSale);
     holdContract = HoldPresaleContract(holdCont);
     addAssetsOwner(msg.sender);
   }
 
+  function setOldPresaleContract(address presaleContract) public onlyOwner {
+    preSaleContract = OpportyPresale(presaleContract);
+  }
+
+  function setToken(address newToken) public onlyOwner {
+    token = OpportyToken(newToken);
+    TokenChanged(token);
+  }
+
   function startPresale() public onlyOwner {
-    require(state == SaleState.NEW);
     state = SaleState.SALE;
     SaleStarted(block.number);
   }
 
   function endPresale() public onlyOwner {
-    require(state == SaleState.SALE);
     state = SaleState.ENDED;
     SaleEnded(block.number);
   }
 
   function addToWhitelist(address inv, uint amount, uint8 holdPeriod, uint8 bonus) public onlyAssetsOwners {
     require(state == SaleState.NEW || state == SaleState.SALE);
-    require(holdPeriod == 1 || holdPeriod == 3 || holdPeriod == 6 || holdPeriod == 12);
+    require(holdPeriod >= 1);
     require(amount >= minimalContribution);
 
     if (whiteList[inv].isActive == false) {
       whiteList[inv].isActive = true;
-      whiteList[inv].payed    = false;
+      whiteList[inv].payed = false;
       whitelistIndexes[whitelistIndex] = inv;
       whitelistIndex++;
     }
 
-    whiteList[inv].invAmount  = amount;
+    whiteList[inv].invAmount = amount;
     whiteList[inv].holdPeriod = holdPeriod;
     whiteList[inv].bonus = bonus;
 
-    if (whiteList[inv].holdPeriod==1)  whiteList[inv].holdTimestamp = endSaleDate.add(30 days); else
-    if (whiteList[inv].holdPeriod==3)  whiteList[inv].holdTimestamp = endSaleDate.add(92 days); else
-    if (whiteList[inv].holdPeriod==6)  whiteList[inv].holdTimestamp = endSaleDate.add(182 days); else
-    if (whiteList[inv].holdPeriod==12) whiteList[inv].holdTimestamp = endSaleDate.add(1 years);
-
+    whiteList[inv].holdTimestamp = endSaleDate.add(whiteList[inv].holdPeriod * 30 days); 
+    
     AddedToWhiteList(inv, whiteList[inv].invAmount, whiteList[inv].holdPeriod,  whiteList[inv].bonus);
   }
 
@@ -133,19 +136,19 @@ contract OpportyPresale2 is Pausable {
     if (now > endDate) {
       state = SaleState.ENDED;
       msg.sender.transfer(msg.value);
-      return ;
+      return;
     }
 
     WhitelistContributor memory contrib = whiteList[msg.sender];
     require(contrib.invAmount <= msg.value || contrib.payed);
 
-    if(whiteList[msg.sender].payed == false) {
+    if (whiteList[msg.sender].payed == false) {
       whiteList[msg.sender].payed = true;
     }
 
     ethRaised += msg.value;
 
-    uint tokenAmount  = msg.value.div(price);
+    uint tokenAmount = msg.value.div(price);
     tokenAmount += tokenAmount.mul(contrib.bonus).div(100);
     tokenAmount *= 10 ** 18;
 
@@ -177,9 +180,9 @@ contract OpportyPresale2 is Pausable {
 
     require(getBalanceContract() >= tokenRaised);
 
-    if (token.transfer(holdContract, tokenRaised )) {
+    if (token.transfer(holdContract, tokenRaised)) {
       tokensTransferredToHold = true;
-      TokensTransferedToHold(holdContract, tokenRaised );
+      TokensTransferedToHold(holdContract, tokenRaised);
     }
   }
 
@@ -201,17 +204,19 @@ contract OpportyPresale2 is Pausable {
     WithdrawedEthToWallet(bal);
   }
 
+  function setPrice(uint newPrice) public onlyOwner {
+    uint oldPrice = price;
+    price = newPrice;
+    ManualPriceChange(oldPrice, newPrice);
+  }
+
   function setEndSaleDate(uint date) public onlyOwner {
-    require(state == SaleState.NEW || state == SaleState.SALE);
-    require(date > now);
     uint oldEndDate = endSaleDate;
     endSaleDate = date;
     ManualChangeEndDate(oldEndDate, date);
   }
 
   function setEndDate(uint date) public onlyOwner {
-    require(state == SaleState.NEW || state == SaleState.SALE);
-    require(date > now);
     uint oldEndDate = endDate;
     endDate = date;
     ManualChangeEndDate(oldEndDate, date);

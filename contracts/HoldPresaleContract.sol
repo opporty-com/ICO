@@ -28,9 +28,11 @@ contract HoldPresaleContract is Ownable {
 
   event TokensTransfered(address contributor , uint amount);
   event Hold(address sender, address contributor, uint amount, uint8 holdPeriod);
+  event TokenChanged(address newAddress);
+  event ManualPriceChange(uint beforePrice, uint afterPrice);
 
   modifier onlyAssetsOwners() {
-    require(assetOwnersIndex[msg.sender] > 0);
+    require(assetOwnersIndex[msg.sender] > 0 || msg.sender == owner);
     _;
   }
 
@@ -39,20 +41,22 @@ contract HoldPresaleContract is Ownable {
   }
 
   /* constructor */
-  function HoldPresaleContract(address oppToken) public {
-    OppToken = OpportyToken(oppToken);
+  function setToken(address newToken) public onlyOwner {
+    OppToken = OpportyToken(newToken);
+    TokenChanged(newToken);
   }
 
   function setPresaleCont(address pres) public onlyOwner {
     presaleCont = pres;
   }
 
-  function changeHoldByOwner(address holder, uint tokens, uint8 period, uint holdTimestamp, bool withdrawed ) public onlyOwner {
+  function changeHold(address holder, uint tokens, uint8 period, uint holdTimestamp, bool withdrawed ) public onlyAssetsOwners {
     if (holderList[holder].isActive == true) {
       holderList[holder].tokens = tokens;
       holderList[holder].holdPeriod = period;
       holderList[holder].holdPeriodTimestamp = holdTimestamp;
       holderList[holder].withdrawed = withdrawed;
+      Hold(msg.sender, holder, tokens, period);
     }
   }
 
