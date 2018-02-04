@@ -2,16 +2,16 @@ pragma solidity ^0.4.18;
 
 import "./OpportyToken.sol";
 import "./Pausable.sol";
-import "./HoldPresaleContract.sol";
+import "./OpportyWhiteListHold.sol";
 import "./OpportyPresale.sol";
 
-contract OpportyPresale2 is Pausable {
+contract OpportyWhiteList is Pausable {
   using SafeMath for uint256;
 
   OpportyToken public token;
 
-  HoldPresaleContract public holdContract;
-  OpportyPresale      public preSaleContract;
+  OpportyWhiteListHold public holdContract;
+  OpportyPresale       public preSaleContract;
 
   enum SaleState  { NEW, SALE, ENDED }
   SaleState public state;
@@ -70,7 +70,7 @@ contract OpportyPresale2 is Pausable {
   }
 
   /* constructor */
-  function OpportyPresale2(
+  function OpportyWhiteList(
     address walletAddress,
     uint end,
     uint endSale,
@@ -83,8 +83,7 @@ contract OpportyPresale2 is Pausable {
     wallet = walletAddress;
     minimalContribution = 0.3 * 1 ether;
 
-    //preSaleContract = OpportyPresale(oldPreSale);
-    holdContract = HoldPresaleContract(holdCont);
+    holdContract = OpportyWhiteListHold(holdCont);
     addAssetsOwner(msg.sender);
   }
 

@@ -2,14 +2,14 @@ pragma solidity ^0.4.18;
 
 import "./OpportyToken.sol";
 import "./Pausable.sol";
-import "./HoldPresaleContract.sol";
+import "./OpportyWhiteListHold.sol";
 
 contract OpportyPresale is Pausable {
   using SafeMath for uint256;
 
   OpportyToken public token;
 
-  HoldPresaleContract public holdContract;
+  OpportyWhiteListHold public holdContract;
 
   enum SaleState  { NEW, SALE, ENDED }
   SaleState public state;
@@ -96,7 +96,7 @@ contract OpportyPresale is Pausable {
     bonuses.push(Bonus({minHold: 12, minAmount: 1000, bonus: 80 }));
     bonuses.push(Bonus({minHold: 12, minAmount: 5000, bonus: 90 }));
     
-    holdContract = HoldPresaleContract(holdCont);
+    holdContract = OpportyWhiteListHold(holdCont);
   }
 
   function changeBonus(uint8 minHold, uint minAmount, uint8 newBonus) public {

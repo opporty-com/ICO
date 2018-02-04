@@ -3,19 +3,24 @@ pragma solidity ^0.4.18;
 import "./OpportyToken.sol";
 import "./Pausable.sol";
 
-contract YearHold is Pausable {
+contract OpportyMonthHold is Pausable {
   using SafeMath for uint256;
   OpportyToken public token;
 
   uint public holdPeriod;
   address public multisig;
 
+  // start and end timestamps where investments are allowed
+  uint public startDate;
   uint public endDate;
   uint public endSaleDate;
 
   uint private price;
 
   uint public minimalContribution;
+
+  // total ETH collected
+  uint public ethRaised;
 
   enum SaleState { NEW, SALE, ENDED }
   SaleState public state;
@@ -46,6 +51,7 @@ contract YearHold is Pausable {
 
   event TokensTransfered(address contributor , uint amount);
   event Hold(address sender, address contributor, uint amount, uint8 holdPeriod);
+  event ManualChangeStartDate(uint beforeDate, uint afterDate);
   event ManualChangeEndDate(uint beforeDate, uint afterDate);
   event ChangeMinAmount(uint oldMinAmount, uint minAmount);
   event BonusChanged(uint minAmount, uint maxAmount, uint8 newBonus);
@@ -63,23 +69,24 @@ contract YearHold is Pausable {
     _;
   }
 
-  function YearHold(address walletAddress, uint end, uint endSale) public {
-    holdPeriod = 1 years;
+  function OpportyMonthHold(address walletAddress, uint start, uint end, uint endSale) public {
+    holdPeriod = 30 days;
     state = SaleState.NEW;
 
-    endDate = end;
+    startDate = start;
+    endDate   = end;
     endSaleDate = endSale;
     price = 0.0002 * 1 ether;
     multisig = walletAddress;
     minimalContribution = 0.3 * 1 ether;
 
-    bonuses.push(Bonus({minAmount: 0, maxAmount: 50, bonus: 35 }));
-    bonuses.push(Bonus({minAmount: 50, maxAmount: 100, bonus: 40 }));
-    bonuses.push(Bonus({minAmount: 100, maxAmount: 250, bonus: 45 }));
-    bonuses.push(Bonus({minAmount: 250, maxAmount: 500, bonus: 50 }));
-    bonuses.push(Bonus({minAmount: 500, maxAmount: 1000, bonus: 70 }));
-    bonuses.push(Bonus({minAmount: 1000, maxAmount: 5000, bonus: 80 }));
-    bonuses.push(Bonus({minAmount: 5000, maxAmount: 99999999, bonus: 90 }));
+    bonuses.push(Bonus({minAmount: 0, maxAmount: 50, bonus: 25 }));
+    bonuses.push(Bonus({minAmount: 50, maxAmount: 100, bonus: 30 }));
+    bonuses.push(Bonus({minAmount: 100, maxAmount: 250, bonus: 35 }));
+    bonuses.push(Bonus({minAmount: 250, maxAmount: 500, bonus: 40 }));
+    bonuses.push(Bonus({minAmount: 500, maxAmount: 1000, bonus: 45 }));
+    bonuses.push(Bonus({minAmount: 1000, maxAmount: 5000, bonus: 55 }));
+    bonuses.push(Bonus({minAmount: 5000, maxAmount: 99999999, bonus: 70 }));
   }
 
   function changeBonus(uint minAmount, uint maxAmount, uint8 newBonus) public {
@@ -112,10 +119,12 @@ contract YearHold is Pausable {
   function() public payable {
     require(state == SaleState.SALE);
     require(msg.value >= minimalContribution);
+    require(now >= startDate);
 
     if (now > endDate) {
       state = SaleState.ENDED;
       msg.sender.transfer(msg.value);
+      SaleEnded();
       return ;
     }
 
@@ -153,6 +162,7 @@ contract YearHold is Pausable {
   }
 
   function forwardFunds() internal {
+    ethRaised += msg.value;
     multisig.transfer(msg.value);
     FundsTransferredToMultisig(multisig, msg.value);
   }
@@ -211,6 +221,12 @@ contract YearHold is Pausable {
     return true;
   }
 
+  function setStartDate(uint date) public onlyOwner {
+    uint oldStartDate = startDate;
+    startDate = date;
+    ManualChangeStartDate(oldStartDate, date);
+  }
+
   function setEndSaleDate(uint date) public onlyOwner {
     uint oldEndDate = endSaleDate;
     endSaleDate = date;
@@ -256,5 +272,9 @@ contract YearHold is Pausable {
     }
     return tokens;
   }
-  
+
+  function getEthRaised() constant external returns (uint) {
+    return ethRaised;
+  }
+
 }

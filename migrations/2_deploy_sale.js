@@ -2,171 +2,182 @@ const moment        = require('moment');
 const abi           = require('ethereumjs-abi');
 const Promise       = require('bluebird');
 
-const OpportyToken  = artifacts.require("./OpportyToken.sol");
-const OpportyHold   = artifacts.require("./OpportyHold.sol");
-const OpportySale   = artifacts.require("./OpportySale.sol");
-const OpportyPresale      = artifacts.require("./OpportyPresale.sol");
-const OpportyPresale2     = artifacts.require("./OpportyPresale2.sol");
-const HoldPresaleContract = artifacts.require("./HoldPresaleContract.sol");
+const OpportyToken          = artifacts.require("./OpportyToken.sol");
+const OpportyWhiteList      = artifacts.require("./OpportyWhiteList.sol");
+const OpportyWhiteListHold  = artifacts.require("./OpportyWhiteListHold.sol");
+const OpportyMonthHold      = artifacts.require("./OpportyMonthHold.sol");
+const OpportyYearHold       = artifacts.require("./OpportyYearHold.sol");
 
 module.exports = function(deployer, network) {
 
   if(network === "development") {
-    /* OpportySale */
-    let tokenAddress; // type address OpportyToken
-    let walletAddress = web3.eth.accounts[web3.eth.accounts.length - 1]; // type address Multisig
-    let addPreSaleManagerAddress = web3.eth.accounts[web3.eth.accounts.length - 2]; // type address AssetsPreSaleOwner call AddToWhitelist
-    let start = moment().unix();//type uint set timestamp start Crowdsale
-    let end   = moment(start * 1000).add(120, 'minute').unix(); // type uint set timestamp finish Crowdsale
 
-    /* OpportyHold */
-    let holdCont;
-    let postFreezeDestination = walletAddress;
-    let holdDays = 1;
+    /* base */
+    let multisigAddress = web3.eth.accounts[web3.eth.accounts.length - 1]; // type address Multisig
+    let managerAddress  = web3.eth.accounts[web3.eth.accounts.length - 2]; // type address AssetsPreSaleOwner call AddToWhitelist
 
-    /* HoldPresaleContract */
-    let holdContPreSale;
-    let InstancePreSaleHold;
+    /* OpportyToken */
+    let tokenAddress;
+    let TokenInstance;
 
-    /* OpportyPresale */
-    let presaleContAdress;
-    let presaleEnd = moment().add(60, 'minute').unix();
+    /* OpportyWhiteListHold */
+    let whiteListHoldAddress;
+    let WhiteListHoldInstance;
 
-    /* OpportyPresale2 */
-    let InstancePreSale2;
-    let presaleContAddress2;
-    let presaleEnd2 = moment().add(100, 'minute').unix();
+    /* OpportyWhiteList */
+    let whiteListAddress;
+    let WhiteListInstance;
+    let whiteListEnd = moment().add(10, 'minute').unix();// end sale
+    let whiteListEndSale = whiteListEnd;// holding date start
+
+    /* OpportyMonthHold */
+    let monthHoldAddress;
+    let MonthHoldInstance;
+    let monthHoldStart    = moment().unix();// start sale
+    let monthHoldEnd      = moment().add(20, 'minute').unix();// end sale
+    let monthHoldEndSale  = monthHoldEnd;// holding date start
+
+    /* OpportyYearHold */
+    let yearHoldAddress;
+    let YearHoldInstance;
+    let yearHoldStart   = moment().unix();// start sale
+    let yearHoldEnd     = moment().add(30, 'minute').unix();// end sale
+    let yearHoldEndSale = yearHoldEnd;// holding date start
 
     deployer.deploy(OpportyToken)
-      .then(() => {
-        tokenAddress = OpportyToken.address;
-
-        return deployer.deploy(OpportyHold, tokenAddress, postFreezeDestination,holdDays)
-          .then(() => OpportyHold.deployed());
+      .then(() => OpportyToken.deployed())
+      .then((instance) => {
+        TokenInstance   = instance;
+        tokenAddress    = OpportyToken.address;
+        return true;
       })
       .then(() => {
-        holdCont = OpportyHold.address;
-
-        return deployer.deploy(HoldPresaleContract, tokenAddress)
-          .then(() => HoldPresaleContract.deployed())
+        return deployer.deploy(OpportyWhiteListHold)
+          .then(() => OpportyWhiteListHold.deployed())
           .then((instance) => {
-            InstancePreSaleHold = instance;
-            return Promise.resolve(true);
+            WhiteListHoldInstance   = instance;
+            whiteListHoldAddress    = OpportyWhiteListHold.address;
+            return true;
           })
       })
       .then(() => {
-        holdContPreSale = HoldPresaleContract.address;
-
-        return deployer.deploy(OpportyPresale, tokenAddress, walletAddress, presaleEnd, end, holdContPreSale)
-          .then(() => OpportyPresale.deployed());
-      })
-      .then(() => {
-        presaleContAdress = OpportyPresale.address;
-
-        return deployer.deploy(OpportyPresale2, tokenAddress, walletAddress, presaleEnd2, end, holdContPreSale, presaleContAdress)
-          .then(() => OpportyPresale2.deployed())
+        return deployer.deploy(OpportyWhiteList, multisigAddress, whiteListEnd, whiteListEndSale, whiteListHoldAddress)
+          .then(() => OpportyWhiteList.deployed())
           .then((instance) => {
-            InstancePreSale2 = instance;
-            return Promise.resolve(true);
+            WhiteListInstance   = instance;
+            whiteListAddress    = OpportyWhiteList.address;
+            return true;
           })
       })
       .then(() => {
-        presaleContAddress2 = OpportyPresale2.address;
-
-        return deployer.deploy(OpportySale, tokenAddress, walletAddress, start, end, holdContPreSale, presaleContAddress2)
-          .then(() => OpportySale.deployed())
-          .catch(e => {
-            console.log(`\n\n\n OpportySale \n\n\n`);
-            console.log(e);
-          });
-
+        return deployer.deploy(OpportyMonthHold, multisigAddress, monthHoldStart, monthHoldEnd, monthHoldEndSale)
+          .then(() => OpportyMonthHold.deployed())
+          .then((instance) => {
+            MonthHoldInstance   = instance;
+            monthHoldAddress    = OpportyMonthHold.address;
+            return true;
+          })
       })
       .then(() => {
-        let contractSaleABI = abi.rawEncode(
-          ['address', 'address', 'uint', 'uint', 'address', 'address'],
-          [tokenAddress, walletAddress, start, end, holdContPreSale, presaleContAddress2]
-        );
-        let contractPreSaleABI = abi.rawEncode(
-          ['address', 'address', 'uint', 'uint', 'address'],
-          [tokenAddress, walletAddress, presaleEnd, end, holdContPreSale]
-        );
-        let contractPreSaleABI2 = abi.rawEncode(
-          ['address', 'address', 'uint', 'uint', 'address', 'address'],
-          [tokenAddress, walletAddress, presaleEnd2, end, holdContPreSale, presaleContAdress]
-        );
-        let contractHoldABI = abi.rawEncode(
-          ['address', 'address', 'uint'],
-          [tokenAddress, postFreezeDestination, holdDays]
-        );
-        let contractPresaleHoldABI = abi.rawEncode(['address'], [tokenAddress]);
+        return deployer.deploy(OpportyYearHold, multisigAddress, yearHoldStart, yearHoldEnd, yearHoldEndSale)
+          .then(() => OpportyYearHold.deployed())
+          .then((instance) => {
+            YearHoldInstance   = instance;
+            yearHoldAddress    = OpportyYearHold.address;
+            return true;
+          })
+      })
+      .then(() => {
 
+        let whiteListABI = abi.rawEncode(
+          ['address', 'uint', 'uint', 'address'],
+          [multisigAddress, whiteListEnd, whiteListEndSale, whiteListHoldAddress]
+        );
 
-        console.log('\n\n\nOpportySaleInfo\n');
-        console.log('tokenAddress:    ', tokenAddress);
-        console.log('multisigAddress: ', walletAddress);
-        console.log('addPreSaleManager:',addPreSaleManagerAddress);
-        console.log('start:           ', moment.unix(start).format('DD-MM-YYYY HH:mm:ss'));
-        console.log('end:             ', moment.unix(end).format('DD-MM-YYYY HH:mm:ss'));
-        console.log('PreSaleContract:    ', presaleContAdress);
-        console.log('PreSaleContract2:   ', presaleContAddress2);
-        console.log('holdContract:       ', holdCont);
-        console.log('PresaleHoldContract:', holdContPreSale);
+        let monthHoldABI = abi.rawEncode(
+          ['address', 'uint', 'uint', 'uint'],
+          [multisigAddress, monthHoldStart, monthHoldEnd, monthHoldEndSale]
+        );
 
-        console.log('\nContractSale:');
-        console.log('Address:', OpportySale.address);
+        let yearHoldABI = abi.rawEncode(
+          ['address', 'uint', 'uint', 'uint'],
+          [multisigAddress, yearHoldStart, yearHoldEnd, yearHoldEndSale]
+        );
+
+        console.log('\n\n\nOpportyInfo\n');
+        console.log('tokenAddress:          ', tokenAddress);
+        console.log('multisigAddress:       ', multisigAddress);
+        console.log('managerAddress:        ', managerAddress);
+        console.log('OpportyWhiteListHold:  ', whiteListHoldAddress);
+        console.log('OpportyWhiteList:      ', whiteListAddress);
+        console.log('OpportyMonthHold:      ', monthHoldAddress);
+        console.log('OpportyYearHold:       ', yearHoldAddress);
+
+        console.log('\nOpportyToken:');
+        console.log('Address:       ', tokenAddress);
         console.log('ContractABI:\n');
-        console.log(contractSaleABI.toString('hex'));
         console.log('\nABI:\n');
-        console.log(JSON.stringify(OpportySale.abi));
+        console.log(JSON.stringify(OpportyToken.abi));
         console.log('\n\n\n');
 
-        console.log('\nContractPreSale:');
-        console.log('Address:', presaleContAdress);
-        console.log('presaleEnd:', moment.unix(presaleEnd).format('DD-MM-YYYY HH:mm:ss'));
+        console.log('\nOpportyWhiteListHold:');
+        console.log('Address:       ', whiteListHoldAddress);
         console.log('ContractABI:\n');
-        console.log(contractPreSaleABI.toString('hex'));
         console.log('\nABI:\n');
-        console.log(JSON.stringify(OpportyPresale.abi));
+        console.log(JSON.stringify(OpportyWhiteListHold.abi));
         console.log('\n\n\n');
 
-        console.log('\nContractPreSale2:');
-        console.log('Address:', presaleContAddress2);
-        console.log('presaleEnd:', moment.unix(presaleEnd).format('DD-MM-YYYY HH:mm:ss'));
+        console.log('\nOpportyWhiteList:');
+        console.log('Address:       ', whiteListAddress);
+        console.log('walletAddress: ', multisigAddress);
+        console.log('end:           ', moment.unix(whiteListEnd).format('DD-MM-YYYY HH:mm:ss'));
+        console.log('endSale:       ', moment.unix(whiteListEndSale).format('DD-MM-YYYY HH:mm:ss'));
+        console.log('holdCont:      ', whiteListHoldAddress);
         console.log('ContractABI:\n');
-        console.log(contractPreSaleABI2.toString('hex'));
+        console.log(whiteListABI.toString('hex'));
         console.log('\nABI:\n');
-        console.log(JSON.stringify(OpportyPresale2.abi));
+        console.log(JSON.stringify(OpportyWhiteList.abi));
         console.log('\n\n\n');
 
-        console.log('\nContractPreSaleHold:');
-        console.log('Address:', holdContPreSale);
+        console.log('\nOpportyMonthHold:');
+        console.log('Address:       ', monthHoldAddress);
+        console.log('walletAddress: ', multisigAddress);
+        console.log('start:         ', moment.unix(monthHoldStart).format('DD-MM-YYYY HH:mm:ss'));
+        console.log('end:           ', moment.unix(monthHoldEnd).format('DD-MM-YYYY HH:mm:ss'));
+        console.log('endSale:       ', moment.unix(monthHoldEndSale).format('DD-MM-YYYY HH:mm:ss'));
         console.log('ContractABI:\n');
-        console.log(contractPresaleHoldABI.toString('hex'));
+        console.log(monthHoldABI.toString('hex'));
         console.log('\nABI:\n');
-        console.log(JSON.stringify(HoldPresaleContract.abi));
+        console.log(JSON.stringify(OpportyMonthHold.abi));
         console.log('\n\n\n');
 
-        console.log('\nContractHold:');
-        console.log('Address:', holdCont);
-        console.log('postFreezeDestination:', postFreezeDestination);
+        console.log('\nOpportyYearHold:');
+        console.log('Address:       ', yearHoldAddress);
+        console.log('walletAddress: ', multisigAddress);
+        console.log('start:         ', moment.unix(yearHoldStart).format('DD-MM-YYYY HH:mm:ss'));
+        console.log('end:           ', moment.unix(yearHoldEnd).format('DD-MM-YYYY HH:mm:ss'));
+        console.log('endSale:       ', moment.unix(yearHoldEndSale).format('DD-MM-YYYY HH:mm:ss'));
         console.log('ContractABI:\n');
-        console.log(contractHoldABI.toString('hex'));
+        console.log(yearHoldABI.toString('hex'));
         console.log('\nABI:\n');
-        console.log(JSON.stringify(OpportyHold.abi));
+        console.log(JSON.stringify(OpportyYearHold.abi));
         console.log('\n\n\n');
 
         return Promise.resolve(true);
       })
       .then(() => {
         return Promise.all([
-          InstancePreSaleHold.addAssetsOwner(presaleContAdress),
-          InstancePreSaleHold.addAssetsOwner(presaleContAddress2),
-          InstancePreSaleHold.addAssetsOwner(OpportySale.address),
-          InstancePreSale2.addAssetsOwner(addPreSaleManagerAddress),
+          WhiteListHoldInstance.addAssetsOwner(whiteListAddress),
+          WhiteListHoldInstance.addAssetsOwner(managerAddress),
+          WhiteListInstance.addAssetsOwner(managerAddress),
+          MonthHoldInstance.addAssetsOwner(managerAddress),
+          YearHoldInstance.addAssetsOwner(managerAddress),
         ])
         .then((data) => {
-          console.log(`HoldPresaleContract addAssetsOwner [${presaleContAdress}, ${OpportySale.address}]:`);
-          console.log(`PreSale2 addAssetsOwner [${addPreSaleManagerAddress}]:`);
+          console.log(`OpportyWhiteListHold addAssetsOwner  [${whiteListAddress},${managerAddress}]\n`);
+          console.log(`OpportyWhiteList     addAssetsOwner  [${managerAddress}]\n`);
+          console.log(`OpportyMonthHold     addAssetsOwner  [${managerAddress}]\n`);
+          console.log(`OpportyYearHold      addAssetsOwner  [${managerAddress}]\n`);
 
           return Promise.resolve(true);
         })
@@ -176,8 +187,7 @@ module.exports = function(deployer, network) {
         console.error(e);
       });
   } else {
-    deployer.deploy(OpportyToken)
-      .then(() => deployer.deploy(OpportySale, OpportyToken.address));
+
   }
 
 };

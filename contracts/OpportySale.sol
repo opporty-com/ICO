@@ -3,8 +3,8 @@ pragma solidity ^0.4.18;
 import "./SafeMath.sol";
 import "./OpportyToken.sol";
 import "./Pausable.sol";
-import "./HoldPresaleContract.sol";
-import "./OpportyPresale2.sol";
+import "./OpportyWhiteListHold.sol";
+import "./OpportyWhiteList.sol";
 
 contract OpportySaleBonus is Ownable {
   using SafeMath for uint256;
@@ -146,8 +146,8 @@ contract OpportySale is Pausable {
   // address where funds are collected
   address public wallet;
   // address where funds will be frozen
-  HoldPresaleContract public holdContract;
-  OpportyPresale2 private presale;
+  OpportyWhiteListHold public holdContract;
+  OpportyWhiteList private presale;
   OpportySaleBonus private bonus;
 
   //minimum of tokens that must be on the contract for the start
@@ -208,8 +208,8 @@ contract OpportySale is Pausable {
     releasedTokens = false;
 
     wallet = walletAddress;
-    holdContract = HoldPresaleContract(holdCont);
-    presale = OpportyPresale2(presaleCont);
+    holdContract = OpportyWhiteListHold(holdCont);
+    presale = OpportyWhiteList(presaleCont);
     bonus   = new OpportySaleBonus(start);
   }
 
@@ -245,7 +245,7 @@ contract OpportySale is Pausable {
   }
   function setPreSale(address preSaleAddress) public onlyOwner {
     require(preSaleAddress != 0x0);
-    presale = OpportyPresale2(preSaleAddress);
+    presale = OpportyWhiteList(preSaleAddress);
     ChangePreSale(preSaleAddress);
   }
 

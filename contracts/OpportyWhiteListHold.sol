@@ -3,11 +3,10 @@ pragma solidity ^0.4.18;
 import "./OpportyToken.sol";
 import "./Ownable.sol";
 
-contract HoldPresaleContract is Ownable {
+contract OpportyWhiteListHold is Ownable {
   using SafeMath for uint256;
   // Addresses and contracts
   OpportyToken public OppToken;
-  address private presaleCont;
 
   struct Holder {
     bool isActive;
@@ -28,6 +27,7 @@ contract HoldPresaleContract is Ownable {
 
   event TokensTransfered(address contributor , uint amount);
   event Hold(address sender, address contributor, uint amount, uint8 holdPeriod);
+  event ChangeHold(address sender, address contributor, uint amount, uint8 holdPeriod);
   event TokenChanged(address newAddress);
   event ManualPriceChange(uint beforePrice, uint afterPrice);
 
@@ -40,14 +40,9 @@ contract HoldPresaleContract is Ownable {
     return OppToken.balanceOf(this);
   }
 
-  /* constructor */
   function setToken(address newToken) public onlyOwner {
     OppToken = OpportyToken(newToken);
     TokenChanged(newToken);
-  }
-
-  function setPresaleCont(address pres) public onlyOwner {
-    presaleCont = pres;
   }
 
   function changeHold(address holder, uint tokens, uint8 period, uint holdTimestamp, bool withdrawed ) public onlyAssetsOwners {
@@ -56,7 +51,7 @@ contract HoldPresaleContract is Ownable {
       holderList[holder].holdPeriod = period;
       holderList[holder].holdPeriodTimestamp = holdTimestamp;
       holderList[holder].withdrawed = withdrawed;
-      Hold(msg.sender, holder, tokens, period);
+      ChangeHold(msg.sender, holder, tokens, period);
     }
   }
 
@@ -81,25 +76,21 @@ contract HoldPresaleContract is Ownable {
   }
 
   function returnTokens(uint nTokens) public onlyOwner returns (bool) {
-      require(nTokens <= getBalanceContract());
-      return OppToken.transfer(msg.sender, nTokens);
+    require(nTokens <= getBalance());
+    OppToken.transfer(msg.sender, nTokens);
+    TokensTransfered(msg.sender, nTokens);
+    return true;
   }
 
-  function unlockTokens() external {
-    address contributor = msg.sender;
+  function unlockTokens() public returns (bool) {
+    require(holderList[msg.sender].isActive);
+    require(!holderList[msg.sender].withdrawed);
+    require(now >= holderList[msg.sender].holdPeriodTimestamp);
 
-    if (holderList[contributor].isActive && !holderList[contributor].withdrawed) {
-      if (now >= holderList[contributor].holdPeriodTimestamp) {
-        if (OppToken.transfer(msg.sender, holderList[contributor].tokens)) {
-          holderList[contributor].withdrawed = true;
-          TokensTransfered(contributor,  holderList[contributor].tokens);
-        }
-      } else {
-        revert();
-      }
-    } else {
-      revert();
-    }
+    OppToken.transfer(msg.sender, holderList[msg.sender].tokens);
+    holderList[msg.sender].withdrawed = true;
+    TokensTransfered(msg.sender, holderList[msg.sender].tokens);
+    return true;
   }
 
   function addAssetsOwner(address _owner) public onlyOwner {
