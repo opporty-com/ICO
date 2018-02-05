@@ -172,6 +172,9 @@ module.exports = function(deployer, network) {
           WhiteListInstance.addAssetsOwner(managerAddress),
           MonthHoldInstance.addAssetsOwner(managerAddress),
           YearHoldInstance.addAssetsOwner(managerAddress),
+          WhiteListInstance.startPresale(),
+          MonthHoldInstance.startPresale(),
+          YearHoldInstance.startPresale(),
         ])
         .then((data) => {
           console.log(`OpportyWhiteListHold addAssetsOwner  [${whiteListAddress},${managerAddress}]\n`);
