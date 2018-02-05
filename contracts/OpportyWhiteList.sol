@@ -3,7 +3,6 @@ pragma solidity ^0.4.18;
 import "./OpportyToken.sol";
 import "./Pausable.sol";
 import "./OpportyWhiteListHold.sol";
-import "./OpportyPresale.sol";
 
 contract OpportyWhiteList is Pausable {
   using SafeMath for uint256;
@@ -11,7 +10,6 @@ contract OpportyWhiteList is Pausable {
   OpportyToken public token;
 
   OpportyWhiteListHold public holdContract;
-  OpportyPresale       public preSaleContract;
 
   enum SaleState  { NEW, SALE, ENDED }
   SaleState public state;
@@ -85,10 +83,6 @@ contract OpportyWhiteList is Pausable {
 
     holdContract = OpportyWhiteListHold(holdCont);
     addAssetsOwner(msg.sender);
-  }
-
-  function setOldPresaleContract(address presaleContract) public onlyOwner {
-    preSaleContract = OpportyPresale(presaleContract);
   }
 
   function setToken(address newToken) public onlyOwner {
@@ -232,8 +226,7 @@ contract OpportyWhiteList is Pausable {
   }
 
   function getEthRaised() constant external returns (uint) {
-    uint pre = preSaleContract.getEthRaised();
-    return pre + ethRaised;
+    return ethRaised;
   }
 
   function addAssetsOwner(address _owner) public onlyOwner {
