@@ -1,12 +1,15 @@
 {
   "config": {
     "chainId": 15,
-    "homesteadBlock": 10,
+    "homesteadBlock": 0,
+    "eip150Block": 0,
     "eip155Block": 0,
-    "eip158Block": 0
+    "eip158Block": 0,
+    "byzantiumBlock": 0,
+    "daoForkSupport": true
   },
   "difficulty": "0x400",
-  "gasLimit": "0x2FEFD800",
+  "gasLimit": "4712388",
   "alloc": {
     "0x2bf64b0ebd7ba3e20c54ec9f439c53e87e9d0a70": { "balance": "100000000000000000000000" },
     "0x11a618de3ade9b85cd811bf45af03bad481842ed": { "balance": "100000000000000000000000" },
